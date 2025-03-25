@@ -2,6 +2,9 @@ import React from "react";
 import "./HotelCard.css"; // Import the CSS file
 
 const HotelCard = ({ hotel }) => {
+  // Generate Booking.com search URL dynamically
+  const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotel.name + " " + hotel.address)}`;
+
   return (
     <div className="hotel-card">
       <img 
@@ -13,7 +16,7 @@ const HotelCard = ({ hotel }) => {
         <h2 className="hotel-name">{hotel.name}</h2>
         <p className="hotel-address">{hotel.address}</p>
         <p className="hotel-price">Price per night: ${hotel.price_per_night}</p>
-        <a href={hotel.booking_link} target="_blank" rel="noopener noreferrer" className="hotel-book-btn">
+        <a href={bookingUrl} target="_blank" rel="noopener noreferrer" className="hotel-book-btn">
           Book Now
         </a>
       </div>
