@@ -4,6 +4,9 @@ import Home from "./pages/Home";
 import ReservationForm from "./pages/ReservationForm";
 import ReservationList from "./pages/ReservationList";
 import RestaurantDetail from "./pages/RestaurantDetails";
+import Flights from "./pages/Flights";
+import FlightDetailsPage from "./components/FlightDetail";
+import FlightBooking from "./pages/FlightBooking";
 
 function App() {
   return (
@@ -13,6 +16,9 @@ function App() {
         <Route path="/reservationForm" element={<ReservationForm />} />
         <Route path="/reservationList" element={<ReservationList />} />
         <Route path="/restaurantDetail" element={<RestaurantDetail />} />
+        <Route path="/flights" element={<Flights />} />
+        <Route path="/flights/:flightNumber" element={<FlightDetailsPage />} />
+        <Route path="/book-flight" element={<FlightBooking />} />
       </Routes>
     </Router>
   );
