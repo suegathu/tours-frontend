@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/api";
 import HotelCard from "../components/HotelCard";
+import RestaurantCard from "../components/RestaurantCard";
 import Map from "../components/Map"; // Import the Map component
 import "./Home.css"; // Import CSS for styling
 
 function Home() {
   const [query, setQuery] = useState("");
   const [hotels, setHotels] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [ratingFilter, setRatingFilter] = useState("all");
   const [location, setLocation] = useState([0, 0]); // Default location
+  const [searchType, setSearchType] = useState("hotels");
 
   useEffect(() => {
     // Get user's current location
@@ -27,41 +29,44 @@ function Home() {
   const handleSearch = async () => {
     setLoading(true);
     setError("");
-
+  
     try {
-      const data = await api.searchHotels(query);
-
-      if (!Array.isArray(data)) throw new Error("Invalid response from API");
-
-      setHotels(data);
-
-      // Set map location based on first result if available
+      let data;
+      if (searchType === "hotels") {
+        data = await api.searchHotels(query);
+      } else {
+        data = await api.searchRestaurants(query);
+      }
+  
+      console.log("API Response:", data); 
+  
+      if (!Array.isArray(data)) {
+        throw new Error("Invalid response from API");
+      }
+  
+      if (searchType === "hotels") {
+        setHotels(data);
+      } else {
+        setRestaurants(data);
+      }
+  
       if (data.length > 0) {
         setLocation([data[0].latitude, data[0].longitude]);
       }
     } catch (error) {
-      setError("Error fetching hotels. Please try again.");
-      console.error("Error:", error);
+      setError("Error fetching data. Please try again.");
+      console.error("Error fetching data:", error);
     }
-
+  
     setLoading(false);
   };
-
-  const filterHotels = (hotelsList) => {
-    return hotelsList.filter((hotel) => {
-      const rating = hotel.rating || 0;
-      if (ratingFilter === "low" && rating > 3.5) return false;
-      if (ratingFilter === "mid" && (rating <= 3.5 || rating > 4.5)) return false;
-      if (ratingFilter === "high" && rating <= 4.5) return false;
-      return true;
-    });
-  };
+  
 
   return (
     <div className="home-layout">
-      {/* Left Side - Search and Hotel List */}
+      {/* Left Side - Search and List */}
       <div className="home-container">
-        <h1 className="title">Search Hotels</h1>
+        <h1 className="title">Search</h1>
 
         {/* Search Input */}
         <div className="search-box">
@@ -77,34 +82,52 @@ function Home() {
           </button>
         </div>
 
-        {/* Filters */}
+        {/* Search Type Selection */}
         <div className="filters">
-          <label>Rating:</label>
-          <select value={ratingFilter} onChange={(e) => setRatingFilter(e.target.value)}>
-            <option value="all">All</option>
-            <option value="low">Up to 3.5</option>
-            <option value="mid">3.5 - 4.5</option>
-            <option value="high">4.5 and above</option>
+          <label>Search for:</label>
+          <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
+            <option value="hotels">Hotels</option>
+            <option value="restaurants">Restaurants</option>
           </select>
         </div>
 
         {error && <div className="error">{error}</div>}
 
-        {/* Hotel Cards */}
-        {hotels.length > 0 ? (
-          <div className="hotel-grid">
-            {filterHotels(hotels).map((hotel) => (
-              <HotelCard key={hotel.name} hotel={hotel} />
-            ))}
-          </div>
+        {/* Results */}
+        {searchType === "hotels" ? (
+          hotels.length > 0 ? (
+            <div className="hotel-grid">
+              {hotels.map((hotel, index) => (
+                <HotelCard key={hotel.id || `${hotel.name}-${index}`} hotel={hotel} />
+              ))}
+            </div>
+          ) : (
+            <p className="no-results">No hotels found. Try a different search.</p>
+          )
         ) : (
-          <p className="no-results">No hotels found. Try a different search.</p>
+          restaurants.length > 0 ? (
+            <div className="restaurant-grid">
+              {restaurants.map((restaurant, index) => (
+                <RestaurantCard 
+                  key={restaurant.id || `${restaurant.name}-${index}`} 
+                  restaurant={{
+                    ...restaurant,
+                    images: restaurant.images || [],
+                    address: restaurant.address || "No address available",
+                    website: restaurant.website || "#",
+                  }} 
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="no-results">No restaurants found. Try a different search.</p>
+          )
         )}
       </div>
 
       {/* Right Side - Map */}
       <div className="map-container">
-        <Map location={location} hotels={hotels} />
+        <Map location={location} hotels={searchType === "hotels" ? hotels : restaurants} />
       </div>
     </div>
   );
