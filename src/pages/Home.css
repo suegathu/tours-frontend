@@ -1,0 +1,87 @@
+/* Home Layout */
+.home-layout {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+  }
+  
+  /* Left Side - Home */
+  .home-container {
+    flex: 1; /* Takes up the left side */
+    padding: 20px;
+    overflow-y: auto;
+  }
+  
+  .map-container {
+    flex: 1; /* Takes up the right side */
+    height: 100vh;
+  }
+  
+  /* Right Side - Additional Content */
+  .info-container {
+    flex: 3;
+    padding: 20px;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  
+  /* Search Box */
+  .search-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .search-input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .search-button {
+    padding: 10px 15px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .search-button:disabled {
+    background-color: #cccccc;
+  }
+  
+  /* Filters */
+  .filters {
+    margin-bottom: 15px;
+  }
+  
+  .filters label {
+    margin-right: 10px;
+  }
+  
+  /* Hotel Cards Grid */
+  .hotel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+  }
+  
+  /* Error Message */
+  .error {
+    color: red;
+    margin-bottom: 10px;
+  }
+  
+  /* No Results */
+  .no-results {
+    color: #666;
+    text-align: center;
+  }
+  
+  
