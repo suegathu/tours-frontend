@@ -1,68 +1,87 @@
-import React, { useState, useEffect } from "react";
-import api from "../api/api"; // ✅ Import API object
-import FlightCard from "./FlightCard";
+import React, { useState } from "react";
+import api from "../api/api"; // API functions
+import FlightCard from "./FlightCard"; // Flight Card Component
+import "./FlightList.css"; // Import CSS
 
 const FlightList = () => {
   const [flights, setFlights] = useState([]);
-  const [allFlights, setAllFlights] = useState([]); // ✅ Keep a copy of all flights
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState({
+    from: "",
+    to: "",
+    date: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    const getFlights = async () => {
-      try {
-        const data = await api.fetchFlights();
-        console.log("Fetched Flights Data:", data); // ✅ Log response to check format
-  
-        // Ensure we are accessing the correct structure
-        setFlights(data.flights ? data.flights : data); 
-        setAllFlights(data.flights ? data.flights : data);
-      } catch (error) {
-        console.error("Error fetching flights:", error);
-      }
-    };
-    getFlights();
-  }, []);
-  
+  // Fetch Flights from Aviationstack API
+  const fetchFlightsFromAviationStack = async () => {
+    setLoading(true);
+    setError("");
 
-  const handleSearch = () => {
-    if (!search) {
-      setFlights(allFlights); // ✅ Reset to original data if search is empty
+    if (!search.from || !search.to) {
+      setError("Please enter both departure and destination.");
+      setLoading(false);
       return;
     }
-    const filteredFlights = allFlights.filter((flight) =>
-      [flight.airline, flight.departure_airport, flight.arrival_airport]
-        .some((field) => field && field.toLowerCase().includes(search.toLowerCase()))
-    );
-    setFlights(filteredFlights);
+
+    try {
+      const response = await api.fetchFlightsFromAviationStack(search.from, search.to, search.date);
+      console.log("Fetched Flights from AviationStack:", response);
+
+      if (response.flights && response.flights.length > 0) {
+        setFlights(response.flights);
+      } else {
+        setFlights([]);
+        setError("No flights found for this search.");
+      }
+    } catch (error) {
+      console.error("Error fetching flights from AviationStack:", error);
+      setError("Failed to fetch flights. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">Available Flights</h1>
-
-      {/* Search Input & Button */}
-      <div className="flex gap-2 mb-4">
+    <div className="flight-container">
+      {/* Search Bar */}
+      <div className="search-box">
         <input
           type="text"
-          placeholder="Search by airline, departure, or arrival..."
-          className="w-full p-2 border rounded"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          placeholder="From (e.g., Nairobi)"
+          className="search-input"
+          value={search.from}
+          onChange={(e) => setSearch({ ...search, from: e.target.value })}
         />
-        <button
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-          onClick={handleSearch}
-        >
-          Search
+        <input
+          type="text"
+          placeholder="To (e.g., London)"
+          className="search-input"
+          value={search.to}
+          onChange={(e) => setSearch({ ...search, to: e.target.value })}
+        />
+        <input
+          type="date"
+          className="search-input"
+          value={search.date}
+          onChange={(e) => setSearch({ ...search, date: e.target.value })}
+        />
+        <button className="search-button" onClick={fetchFlightsFromAviationStack}>
+          🔍 Search
         </button>
       </div>
 
-      {/* Flight List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {flights.length > 0 ? (
+      {/* Error Message */}
+      {error && <p className="error-message">{error}</p>}
+
+      {/* Flight Results */}
+      <div className="flights-container">
+        {loading ? (
+          <p className="loading-message">Fetching flights...</p>
+        ) : flights.length > 0 ? (
           flights.map((flight, index) => <FlightCard key={index} flight={flight} />)
         ) : (
-          <p>No flights found</p>
+          <p className="no-flights">No flights found</p>
         )}
       </div>
     </div>

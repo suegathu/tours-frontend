@@ -1,0 +1,53 @@
+.flight-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    padding: 15px;
+    transition: 0.3s;
+  }
+  
+  .flight-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .flight-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .status {
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: bold;
+  }
+  
+  .status.on-time {
+    background: #28a745;
+    color: white;
+  }
+  
+  .status.delayed {
+    background: #dc3545;
+    color: white;
+  }
+  
+  .flight-details p {
+    margin: 5px 0;
+  }
+  
+  .book-btn {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+  }
+  
+  .book-btn:hover {
+    background: #0056b3;
+  }
+  

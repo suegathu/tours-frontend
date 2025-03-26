@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 const API_BASE_URL = "http://localhost:8000";
+const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY; 
+const OPENWEATHER_API = import.meta.env.VITE_OPENWEATHER_API_KEY;
 
 const api = {
   searchHotels: async (query) => {
@@ -75,24 +77,47 @@ const api = {
     }
   },
 
-  fetchFlights: async () => {
+  fetchFlights: async (searchQuery = "") => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/flights/`);
-      console.log('Flight API Response:', response);
+      let url = `${API_BASE_URL}/flights/`;
+      if (searchQuery) {
+        url += `?departure=${searchQuery}&arrival=${searchQuery}`;
+      }
+  
+      const response = await axios.get(url);
+      console.log("Flight API Response:", response);
       return { flights: response.data };
     } catch (error) {
       console.error("Error fetching flights:", error);
-      if (error.response) {
-        console.error('Server responded with:', error.response.data);
-        console.error('Status code:', error.response.status);
-      } else if (error.request) {
-        console.error('No response received:', error.request);
-      } else {
-        console.error('Error setting up request:', error.message);
-      }
       return { flights: [] };
     }
   },
+  fetchFlightsFromAviationStack: async (from, to ) => {
+    try {
+      const response = await axios.get(
+        `http://api.aviationstack.com/v1/flights?access_key=${API_KEY}&dep_iata=${from}&arr_iata=${to}`
+      );
+
+      console.log("AviationStack API Response:", response.data);
+
+      // Extract relevant flight details
+      const flights = response.data.data.map((flight) => ({
+        flight_number: flight.flight.iata,
+        airline: flight.airline.name,
+        departure_airport: flight.departure.airport,
+        arrival_airport: flight.arrival.airport,
+        departure_time: flight.departure.estimated,
+        arrival_time: flight.arrival.estimated,
+        status: flight.flight_status,
+      }));
+
+      return { flights };
+    } catch (error) {
+      console.error("Error fetching flights from AviationStack:", error);
+      return { flights: [] };
+    }
+  },
+  
 
   createFlightBooking: async (bookingData) => {
     try {

@@ -1,18 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import "./FlightCard.css"; // Style for flight cards
 
 const FlightCard = ({ flight }) => {
   return (
-    <div className="border p-4 rounded-lg shadow-md">
-      <h2 className="text-xl font-bold">{flight.airline}</h2>
-      <p>Flight: {flight.flight_number}</p>
-      <p>Departure: {flight.departure_airport}</p>
-      <p>Arrival: {flight.arrival_airport}</p>
-      <p>Status: <span className="font-bold">{flight.status}</span></p>
-      
-      <Link to={`/flights/${flight.flight_number}`} className="block mt-2 text-blue-500">
-        View Details
-      </Link>
+    <div className="flight-card">
+      <div className="flight-header">
+        <h3>{flight.airline}</h3>
+        <span className={`status ${flight.status.toLowerCase()}`}>{flight.status}</span>
+      </div>
+      <div className="flight-details">
+        <p><strong>{flight.departure_airport}</strong> ✈ {flight.arrival_airport}</p>
+        <p>Departure: {new Date(flight.departure_time).toLocaleString()}</p>
+        <p>Arrival: {new Date(flight.arrival_time).toLocaleString()}</p>
+        <p><strong>Price:</strong> ${flight.price || "N/A"}</p>
+      </div>
+      <button className="book-btn">Book Now</button>
     </div>
   );
 };
