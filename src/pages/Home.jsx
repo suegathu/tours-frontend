@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import api from "../api/api";
 import HotelCard from "../components/HotelCard";
 import RestaurantCard from "../components/RestaurantCard";
-import Map from "../components/Map"; // Import the Map component
-import "./Home.css"; // Import CSS for styling
+import Map from "../components/Map"; 
+import "./Home.css"; 
 
 function Home() {
   const [query, setQuery] = useState("");
@@ -11,7 +11,7 @@ function Home() {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [location, setLocation] = useState([0, 0]); // Default location
+  const [location, setLocation] = useState([0, 0]); 
   const [searchType, setSearchType] = useState("hotels");
 
   useEffect(() => {
@@ -109,14 +109,16 @@ function Home() {
             <div className="restaurant-grid">
               {restaurants.map((restaurant, index) => (
                 <RestaurantCard 
-                  key={restaurant.id || `${restaurant.name}-${index}`} 
-                  restaurant={{
-                    ...restaurant,
-                    images: restaurant.images || [],
-                    address: restaurant.address || "No address available",
-                    website: restaurant.website || "#",
-                  }} 
-                />
+                key={restaurant.id || `${restaurant.name}-${index}`} 
+                restaurant={{
+                  ...restaurant,
+                  id: restaurant.id || index, // Ensure there's an ID
+                  images: restaurant.images || [],
+                  address: restaurant.address || "No address available",
+                  website: restaurant.website || "#",
+                }} 
+              />
+              
               ))}
             </div>
           ) : (

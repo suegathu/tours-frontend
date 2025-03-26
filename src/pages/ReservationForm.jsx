@@ -1,72 +1,63 @@
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 
-const ReservationForm = ({ restaurantId }) => {
-  const [formData, setFormData] = useState({
-    user_name: "",
-    user_email: "",
-    date_time: "",
-    number_of_people: 1,
-  });
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const response = await fetch(`http://localhost:8000/restaurants/${restaurantId}/reserve/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
+const ReservationForm = () => {
+    const { restaurantId } = useParams();
+    const [formData, setFormData] = useState({
+        user_name: "",
+        user_email: "",
+        date_time: "",
+        guests: 1,
+        special_request: ""
     });
+    const [message, setMessage] = useState("");
 
-    if (response.ok) {
-      alert("Reservation successful!");
-    } else {
-      alert("Failed to reserve. Try again.");
-    }
-  };
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
-  return (
-    <form onSubmit={handleSubmit} className="mt-4 p-4 border rounded-lg shadow-md">
-      <h3 className="text-xl font-semibold mb-2">Make a Reservation</h3>
-      <input
-        type="text"
-        name="user_name"
-        placeholder="Your Name"
-        value={formData.user_name}
-        onChange={handleChange}
-        className="border p-2 rounded w-full mb-2"
-      />
-      <input
-        type="email"
-        name="user_email"
-        placeholder="Your Email"
-        value={formData.user_email}
-        onChange={handleChange}
-        className="border p-2 rounded w-full mb-2"
-      />
-      <input
-        type="datetime-local"
-        name="date_time"
-        value={formData.date_time}
-        onChange={handleChange}
-        className="border p-2 rounded w-full mb-2"
-      />
-      <input
-        type="number"
-        name="number_of_people"
-        placeholder="Number of People"
-        value={formData.number_of_people}
-        onChange={handleChange}
-        className="border p-2 rounded w-full mb-2"
-        min="1"
-      />
-      <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full">
-        Reserve Now
-      </button>
-    </form>
-  );
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await fetch("http://localhost:8000/api/reservations/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ ...formData, restaurant: restaurantId })
+            });
+
+            if (response.ok) {
+                setMessage("Reservation successful!");
+                setFormData({
+                    user_name: "",
+                    user_email: "",
+                    date_time: "",
+                    guests: 1,
+                    special_request: ""
+                });
+            } else {
+                setMessage("Failed to make reservation. Try again.");
+            }
+        } catch (error) {
+            setMessage("Error: " + error.message);
+        }
+    };
+
+    return (
+        <div>
+            <h2>Book a Table</h2>
+            {message && <p>{message}</p>}
+            <form onSubmit={handleSubmit}>
+                <input type="text" name="user_name" placeholder="Your Name" value={formData.user_name} onChange={handleChange} required />
+                <input type="email" name="user_email" placeholder="Your Email" value={formData.user_email} onChange={handleChange} required />
+                <input type="datetime-local" name="date_time" value={formData.date_time} onChange={handleChange} required />
+                <input type="number" name="guests" placeholder="Guests" value={formData.guests} onChange={handleChange} min="1" required />
+                <textarea name="special_request" placeholder="Special Requests" value={formData.special_request} onChange={handleChange}></textarea>
+                <button type="submit">Reserve Now</button>
+            </form>
+        </div>
+    );
 };
 
 export default ReservationForm;

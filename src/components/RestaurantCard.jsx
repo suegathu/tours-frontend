@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import "./RestaurantCard.css"; // Ensure you have a CSS file
+import "./RestaurantCard.css"; // Ensure you have a valid CSS file
 
 const RestaurantCard = ({ restaurant }) => {
   return (
@@ -8,9 +8,14 @@ const RestaurantCard = ({ restaurant }) => {
       <h3>{restaurant.name}</h3>
       <p>{restaurant.address}</p>
 
-      {/* Display image if available, otherwise show placeholder text */}
-      {restaurant.images && restaurant.images.length > 0 ? (
-        <img src={restaurant.images[0]} alt={restaurant.name} className="restaurant-image" width="200" />
+      {/* Check if restaurant.image_url exists */}
+      {restaurant.image_url ? (
+        <img
+          src={restaurant.image_url}
+          alt={restaurant.name}
+          className="restaurant-image"
+          width="200"
+        />
       ) : (
         <p>No Image Available</p>
       )}
@@ -21,9 +26,9 @@ const RestaurantCard = ({ restaurant }) => {
       </a>
 
       {/* Reserve Button */}
-      <Link to="/{id}reservationForm">
-      <button className="reserve-button">Reserve Now</button>
-    </Link>
+      <Link to={`/restaurants/${restaurant.id}/reservation`}>
+        <button className="reserve-button">Reserve Now</button>
+      </Link>
     </div>
   );
 };
