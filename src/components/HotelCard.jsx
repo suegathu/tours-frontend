@@ -1,12 +1,12 @@
 import React from "react";
 import "./HotelCard.css"; // Import the CSS file
 
-const HotelCard = ({ hotel }) => {
+const HotelCard = ({ hotel, onMouseEnter, onMouseLeave }) => {
   // Generate Booking.com search URL dynamically
   const bookingUrl = `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(hotel.name + " " + hotel.address)}`;
 
   return (
-    <div className="hotel-card">
+    <div className="hotel-card" {...{ onMouseEnter, onMouseLeave}}>
       <img 
         src={hotel.image_url || "https://via.placeholder.com/150"} 
         alt={hotel.name} 

@@ -14,7 +14,8 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [location, setLocation] = useState([0, 0]);
-  const [searchType, setSearchType] = useState("hotels");
+  const [searchType, setSearchType] = useState("hotels"); 
+  const [activeLocation, setActiveLocation] = useState(undefined); // [number, number] || undefined
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -26,6 +27,10 @@ function Home() {
       }
     );
   }, []);
+
+  useEffect(() => {
+    console.log(JSON.stringify({ activeLocation }))
+  }, [activeLocation])
 
   const handleSearch = async () => {
     setLoading(true);
@@ -104,7 +109,11 @@ function Home() {
           <div className="hotel-grid">
             {hotels.length > 0 ? (
               hotels.map((hotel, index) => (
-                <HotelCard key={hotel.id || `${hotel.name}-${index}`} hotel={hotel} />
+                <HotelCard 
+                  key={hotel.id || `${hotel.name}-${index}`} 
+                  hotel={hotel} 
+                  onMouseEnter={() => { setActiveLocation([ hotel.latitude, hotel.longitude ]) }} 
+                  onMouseLeave={() => { setActiveLocation(undefined) }} />
               ))
             ) : (
               <p className="no-results">No hotels found. Try a different search.</p>
@@ -153,7 +162,7 @@ function Home() {
 
       {/* Right Side - Map */}
       <div className="map-container">
-        <Map location={location} markers={markers} />
+        <Map {...{ hotels, restaurants, attractions, activeLocation, location, markers }} />
       </div>
     </div>
   );
