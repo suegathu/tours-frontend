@@ -1,33 +1,42 @@
 import React from "react";
-import "./AttractionCard.css"; // Ensure you create AttractionCard.css for styling
+import "./AttractionCard.css";
+
+const getBookingLink = (attraction) => {
+  if (!attraction.name) return "#";
+
+  const encodedName = encodeURIComponent(attraction.name);
+  const encodedCity = attraction.address?.city ? encodeURIComponent(attraction.address.city) : "";
+
+  return `https://www.getyourguide.com/s/?q=${encodedName}&searchSource=1&city=${encodedCity}`;
+};
 
 function AttractionCard({ attraction }) {
+  const bookingUrl = getBookingLink(attraction);
+
   return (
     <div className="attraction-card">
-      {/* Image */}
       <img 
         src={attraction.image || attraction.image_url || "https://png.pngtree.com/png-vector/20240309/ourmid/pngtree-water-park-attraction-and-pool-landing-header-vector-png-image_11903539.png"} 
         alt={attraction.name} 
         className="attraction-image"
-        onError={(e) => { e.target.src = "https://png.pngtree.com/png-vector/20240309/ourmid/pngtree-water-park-attraction-and-pool-landing-header-vector-png-image_11903539.png"; }} 
-        />
+      />
 
-      {/* Name & Address */}
       <div className="attraction-details">
         <h3 className="attraction-name">{attraction.name}</h3>
-        <p className="attraction-address">{attraction.address}</p>
+        <p className="attraction-address">{attraction.address?.full || "Location not available"}</p>
       </div>
 
-      {/* View More Button */}
-      <a 
-        href={`/attractions/${attraction.id}`} 
-        target="_blank" 
-        rel="noopener noreferrer" 
-        className="view-button"
-        >
-        View Details
+      <div className="button-group">
+        <a href={`/attractions/${attraction.id}`} className="view-button">
+          View Details
         </a>
-
+        
+        {bookingUrl !== "#" && (
+          <a href={bookingUrl} target="_blank" rel="noopener noreferrer" className="book-button">
+            Book on GetYourGuide
+          </a>
+        )}
+      </div>
     </div>
   );
 }
