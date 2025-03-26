@@ -129,7 +129,59 @@ const api = {
       console.error("Error fetching OSM restaurants:", error);
       return [];
     }
-  }
+  },
+
+  fetchAttractions: async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/attractions/`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching attractions:", error);
+      return { error: "Failed to fetch attractions" };
+    }
+  },
+
+  searchAttractions: async (query) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/attractions/?query=${query}`);
+      console.log("Attractions Data:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error searching attractions:", error);
+        return [];
+    }
+  },
+
+  fetchAttractionById: async (id) => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/attractions/${id}/`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching attraction details:", error);
+      return { error: "Failed to fetch attraction details" };
+    }
+  },
+
+  // Users API
+  registerUser: async (userData) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/register/`, userData);
+      return response.data;
+    } catch (error) {
+      console.error("Error registering user:", error);
+      return { error: "Failed to register user" };
+    }
+  },
+
+  loginUser: async (credentials) => {
+    try {
+      const response = await axios.post(`${API_BASE_URL}/auth/login/`, credentials);
+      return response.data;
+    } catch (error) {
+      console.error("Error logging in:", error);
+      return { error: "Failed to login" };
+    }
+  },
 };
 
 export default api;

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../api/api";
 import HotelCard from "../components/HotelCard";
 import RestaurantCard from "../components/RestaurantCard";
+import AttractionCard from "../components/AttractionCard"; // Import AttractionCard component
 import Map from "../components/Map"; 
 import "./Home.css"; 
 
@@ -9,6 +10,7 @@ function Home() {
   const [query, setQuery] = useState("");
   const [hotels, setHotels] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
+  const [attractions, setAttractions] = useState([]); // New state for attractions
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [location, setLocation] = useState([0, 0]); 
@@ -34,8 +36,13 @@ function Home() {
       let data;
       if (searchType === "hotels") {
         data = await api.searchHotels(query);
-      } else {
+        setHotels(data);
+      } else if (searchType === "restaurants") {
         data = await api.searchRestaurants(query);
+        setRestaurants(data);
+      } else if (searchType === "attractions") {
+        data = await api.searchAttractions(query);
+        setAttractions(data);
       }
   
       console.log("API Response:", data); 
@@ -44,14 +51,8 @@ function Home() {
         throw new Error("Invalid response from API");
       }
   
-      if (searchType === "hotels") {
-        setHotels(data);
-      } else {
-        setRestaurants(data);
-      }
-  
       if (data.length > 0) {
-        setLocation([data[0].latitude, data[0].longitude]);
+        setLocation([data[0].latitude || data[0].lat, data[0].longitude || data[0].lon]);
       }
     } catch (error) {
       setError("Error fetching data. Please try again.");
@@ -88,6 +89,7 @@ function Home() {
           <select value={searchType} onChange={(e) => setSearchType(e.target.value)}>
             <option value="hotels">Hotels</option>
             <option value="restaurants">Restaurants</option>
+            <option value="attractions">Attractions</option> {/* Added Attractions */}
           </select>
         </div>
 
@@ -104,32 +106,50 @@ function Home() {
           ) : (
             <p className="no-results">No hotels found. Try a different search.</p>
           )
-        ) : (
+        ) : searchType === "restaurants" ? (
           restaurants.length > 0 ? (
             <div className="restaurant-grid">
               {restaurants.map((restaurant, index) => (
                 <RestaurantCard 
-                key={restaurant.id || `${restaurant.name}-${index}`} 
-                restaurant={{
-                  ...restaurant,
-                  id: restaurant.id || index, // Ensure there's an ID
-                  images: restaurant.images || [],
-                  address: restaurant.address || "No address available",
-                  website: restaurant.website || "#",
-                }} 
-              />
-              
+                  key={restaurant.id || `${restaurant.name}-${index}`} 
+                  restaurant={{
+                    ...restaurant,
+                    id: restaurant.id || index, 
+                    images: restaurant.images || [],
+                    address: restaurant.address || "No address available",
+                    website: restaurant.website || "#",
+                  }} 
+                />
               ))}
             </div>
           ) : (
             <p className="no-results">No restaurants found. Try a different search.</p>
+          )
+        ) : (
+          attractions.length > 0 ? (
+            <div className="attraction-grid">
+              {attractions.map((attraction, index) => (
+                <AttractionCard 
+                  key={attraction.id || `${attraction.name}-${index}`} 
+                  attraction={{
+                    ...attraction,
+                    id: attraction.id || index, 
+                    images: attraction.images || [],
+                    address: attraction.address || "No address available",
+                    website: attraction.website || "#",
+                  }} 
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="no-results">No attractions found. Try a different search.</p>
           )
         )}
       </div>
 
       {/* Right Side - Map */}
       <div className="map-container">
-        <Map location={location} hotels={searchType === "hotels" ? hotels : restaurants} />
+        <Map location={location} hotels={searchType === "hotels" ? hotels : searchType === "restaurants" ? restaurants : attractions} />
       </div>
     </div>
   );
