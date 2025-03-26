@@ -1,34 +1,37 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import "./RestaurantCard.css"; // Ensure you have a valid CSS file
 
 const RestaurantCard = ({ restaurant }) => {
   return (
     <div className="restaurant-card">
       <h3>{restaurant.name}</h3>
-      <p>{restaurant.address}</p>
+      <p>{restaurant.phone ? `📞 ${restaurant.phone}` : "No phone available"}</p>
 
-      {/* Check if restaurant.image_url exists */}
-      {restaurant.image_url ? (
-        <img
-          src={restaurant.image_url}
-          alt={restaurant.name}
-          className="restaurant-image"
-          width="200"
-        />
-      ) : (
-        <p>No Image Available</p>
+      {restaurant.website && (
+        <a href={restaurant.website} target="_blank" rel="noopener noreferrer">
+          Visit Website
+        </a>
       )}
 
-      {/* Restaurant Website Link */}
-      <a href={restaurant.website || "#"} target="_blank" rel="noopener noreferrer">
-        Visit Website
-      </a>
-
-      {/* Reserve Button */}
-      <Link to={`/restaurants/${restaurant.id}/reservation`}>
-        <button className="reserve-button">Reserve Now</button>
-      </Link>
+      {/* Reservation Button Logic */}
+      {restaurant.reservation_link ? (
+        <a href={restaurant.reservation_link} target="_blank" rel="noopener noreferrer">
+          <button className="reserve-button">Reserve Now</button>
+        </a>
+      ) : restaurant.phone ? (
+        <a href={`tel:${restaurant.phone}`}>
+          <button className="call-button">Call to Book</button>
+        </a>
+      ) : (
+        <a
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            restaurant.name + " " + restaurant.address
+          )}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <button className="map-button">Find & Reserve</button>
+        </a>
+      )}
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import axios from 'axios'
+import axios from 'axios';
+
 const API_BASE_URL = "http://localhost:8000";
 
 const api = {
@@ -58,6 +59,7 @@ const api = {
       return { error: "Failed to create reservation" };
     }
   },
+
   searchRestaurants: async (query) => {
     try {
       const response = await fetch(`${API_BASE_URL}/restaurants/?query=${query}`, {
@@ -72,34 +74,26 @@ const api = {
       return { error: "Failed to fetch restaurants" };
     }
   },
+
   fetchFlights: async () => {
     try {
       const response = await axios.get(`${API_BASE_URL}/flights/`);
-      
-      // Log the response to understand its structure
       console.log('Flight API Response:', response);
-      
-      // Directly return response.data, which contains the flights array
       return { flights: response.data };
     } catch (error) {
       console.error("Error fetching flights:", error);
-      
-      // Provide more detailed error information
       if (error.response) {
-        // The request was made and the server responded with a status code
         console.error('Server responded with:', error.response.data);
         console.error('Status code:', error.response.status);
       } else if (error.request) {
-        // The request was made but no response was received
         console.error('No response received:', error.request);
       } else {
-        // Something happened in setting up the request
         console.error('Error setting up request:', error.message);
       }
-      
       return { flights: [] };
     }
   },
+
   createFlightBooking: async (bookingData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/book-flight/`, bookingData);
@@ -116,6 +110,26 @@ const api = {
       };
     }
   },
+
+  fetchOSMRestaurants: async (lat, lon, radius = 1000) => {
+    const url = `https://overpass-api.de/api/interpreter?data=[out:json];node(around:${radius},${lat},${lon})["amenity"="restaurant"];out body;`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      return data.elements.map((place) => ({
+        id: place.id,
+        name: place.tags.name || "Unknown",
+        website: place.tags.website || null,
+        phone: place.tags["contact:phone"] || null,
+        reservation_link: place.tags["reservation:link"] || null,
+        lat: place.lat,
+        lon: place.lon
+      }));
+    } catch (error) {
+      console.error("Error fetching OSM restaurants:", error);
+      return [];
+    }
+  }
 };
 
 export default api;
