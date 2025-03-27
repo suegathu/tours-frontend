@@ -1,53 +1,71 @@
 .flight-card {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    padding: 15px;
-    transition: 0.3s;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   }
   
-  .flight-card:hover {
-    transform: scale(1.05);
-  }
-  
-  .flight-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .status {
-    padding: 4px 8px;
-    border-radius: 5px;
-    font-size: 12px;
-    font-weight: bold;
-  }
-  
-  .status.on-time {
-    background: #28a745;
-    color: white;
-  }
-  
-  .status.delayed {
-    background: #dc3545;
-    color: white;
+  .flight-header h3 {
+    margin: 0 0 16px;
+    color: #333;
   }
   
   .flight-details p {
-    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+  }
+  
+  .flight-details svg {
+    margin-right: 8px;
+    color: #666;
+  }
+  
+  .passenger-selector, 
+  .price-comparison, 
+  .flexible-dates {
+    margin-top: 16px;
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+  }
+  
+  .passenger-controls {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  .passenger-controls label {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .passenger-controls input {
+    margin-top: 4px;
+    padding: 4px;
+  }
+  
+  .date-option {
+    display: inline-block;
+    margin-right: 8px;
+    text-decoration: none;
+    color: #007bff;
   }
   
   .book-btn {
-    background: #007bff;
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
     color: white;
     border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-    border-radius: 5px;
-    transition: 0.3s;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 16px;
   }
   
-  .book-btn:hover {
-    background: #0056b3;
+  .book-btn svg {
+    margin-right: 8px;
   }
-  

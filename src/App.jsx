@@ -23,7 +23,7 @@ function App() {
         <Route path="/restaurant/:id" element={<RestaurantDetail />} />
         <Route path="/flights" element={<Flights />} />
         <Route path="/flights/:flightNumber" element={<FlightDetailsPage />} />
-        <Route path="/book-flight" element={<FlightBooking />} />
+        <Route path="/book-flight/:flightId" element={<FlightBooking />} />
         <Route path="/attractions" element={<AttractionList />} /> 
         <Route path="/attractions/:id" element={<AttractionDetail />} />
         <Route path="/login" element={<Login />} />

@@ -27,6 +27,7 @@ const FlightList = () => {
     try {
       const response = await api.fetchFlightsFromAviationStack(search.from, search.to, search.date);
       console.log("Fetched Flights from AviationStack:", response);
+      console.log("Flight Data:", JSON.data);
 
       if (response.flights && response.flights.length > 0) {
         setFlights(response.flights);
