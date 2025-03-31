@@ -143,7 +143,51 @@ const api = {
         return [];
     }
 },
+ getBookingDetails:async (bookingId) => {
+  const url = `http://127.0.0.1:8000/check-in/${bookingId}/`;
+  console.log("API request to:", url);
 
+  try {
+      const response = await fetch(url);
+
+      // Ensure response is valid JSON
+      if (!response.ok) {
+          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+  } catch (error) {
+      console.error("API error:", error);
+      throw error;
+  }
+},
+
+checkInFlight: async (bookingId) => {
+  if (!bookingId) {
+      throw new Error("Booking ID is required for check-in.");
+  }
+
+  try {
+      const response = await fetch(`http://127.0.0.1:8000/check-in/${bookingId}/`, {
+          method: "GET",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("Check-in failed:", error.message);
+      throw error;
+  }
+},
 
   // 🔹 Fetch OpenStreetMap Restaurants
   fetchOSMRestaurants: async (lat, lon, radius = 1000) => {

@@ -68,8 +68,7 @@ const BookFlight = () => {
                 setError("");
                 setSelectedSeat("");
     
-                // Redirect to the check-in page
-                navigate(`/checkin?booking_id=${response.booking_id}`);
+                navigate(`/checkin?booking_id=${response.booking.id}`);
             } else {
                 throw new Error(response.message || "Booking failed. Please try again.");
             }
