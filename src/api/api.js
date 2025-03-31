@@ -1,210 +1,251 @@
-import axios from 'axios';
+import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000";
-const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY; 
-const OPENWEATHER_API = import.meta.env.VITE_OPENWEATHER_API_KEY;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY;
+
+// Axios instance for API requests
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+});
+
+// Function to get auth token from local storage
+const getAuthToken = () => localStorage.getItem("token");
+
+// Helper function to handle errors
+const handleError = (error) => {
+  console.error("API Error:", error);
+  return { error: error.response?.data?.message || "An error occurred" };
+};
 
 const api = {
+  // 🔹 Fetch Hotels
   searchHotels: async (query) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/hotels/search_locations/?query=${query}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const response = await apiClient.get(`/api/hotels/search_locations/`, {
+        params: { query },
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      return await response.json();
+      return response.data;
     } catch (error) {
-      console.error("Error fetching hotels:", error);
-      return { error: "Failed to fetch hotels" };
+      return handleError(error);
     }
   },
 
+  // 🔹 Fetch Restaurants
   fetchRestaurants: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurants/`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return await response.json();
+      const response = await apiClient.get(`/restaurants/`);
+      return response.data;
     } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      return { error: "Failed to fetch restaurants" };
+      return handleError(error);
     }
   },
 
+  // 🔹 Search Restaurants
+  searchRestaurants: async (query) => {
+    // /restaurants/fetch_restaurants/?location=Nairobi/
+    try {
+      const response = await apiClient.get(`/restaurants/fetch_restaurants`, { params: { location: query } });
+      return response.data;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // 🔹 Create Restaurant Reservation
   createReservation: async (reservationData) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurants/reservations/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(reservationData),
+      const token = getAuthToken();
+      if (!token) return { error: "Authentication required. Please log in." };
+
+      const response = await apiClient.post(`/restaurants/reservations/`, reservationData, {
+        headers: { Authorization: `Token ${token}` },
       });
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      return await response.json();
+      return response.data;
     } catch (error) {
-      console.error("Error creating reservation:", error);
-      return { error: "Failed to create reservation" };
+      return handleError(error);
     }
   },
 
-  searchRestaurants: async (query) => {
+  // 🔹 Fetch Flights (Local API)
+  fetchFlightsFromAviationStack: async (from, to) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/restaurants/?query=${query}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
+      const response = await axios.get(`http://api.aviationstack.com/v1/flights`, {
+        params: { access_key: API_KEY, dep_iata: from, arr_iata: to },
       });
-
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      console.error("Error fetching restaurants:", error);
-      return { error: "Failed to fetch restaurants" };
-    }
-  },
-
-  fetchFlights: async (searchQuery = "") => {
-    try {
-      let url = `${API_BASE_URL}/flights/`;
-      if (searchQuery) {
-        url += `?departure=${searchQuery}&arrival=${searchQuery}`;
+  
+      console.log("Full API Response:", response.data); // Check the full structure
+  
+      if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
+        console.error("Unexpected API response format:", response.data);
+        return [];
       }
   
-      const response = await axios.get(url);
-      console.log("Flight API Response:", response);
-      return { flights: response.data };
+      return response.data.data.map((flight) => ({
+        flight_number: flight.flight?.iata || "N/A",
+        airline: flight.airline?.name || "Unknown Airline",
+        departure_airport: flight.departure?.airport || "Unknown Airport",
+        arrival_airport: flight.arrival?.airport || "Unknown Airport",
+        departure_time: flight.departure?.estimated || "Unknown Time",
+        arrival_time: flight.arrival?.estimated || "Unknown Time",
+        status: flight.flight_status || "Unknown",
+      }));
     } catch (error) {
       console.error("Error fetching flights:", error);
-      return { flights: [] };
+      return []; // Ensure an array is returned
     }
   },
-  fetchFlightsFromAviationStack: async (from, to ) => {
+
+  // 🔹 Fetch Flight Details
+  fetchFlightDetails: async (flightId) => {
     try {
-      const response = await axios.get(
-        `http://api.aviationstack.com/v1/flights?access_key=${API_KEY}&dep_iata=${from}&arr_iata=${to}`
+      const response = await apiClient.get(`/flights/${flightId}/`);
+      return response.data;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // 🔹 Create Flight Booking (with Authentication)
+  bookFlight: async (flightId, seatNumber) => {
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        return { success: false, message: "User not authenticated. Please log in." };
+      }
+
+      const response = await apiClient.post(
+        `/book-flight/`,
+        { flightId, seatNumber },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
       );
 
-      console.log("AviationStack API Response:", response.data);
-
-      // Extract relevant flight details
-      const flights = response.data.data.map((flight) => ({
-        flight_number: flight.flight.iata,
-        airline: flight.airline.name,
-        departure_airport: flight.departure.airport,
-        arrival_airport: flight.arrival.airport,
-        departure_time: flight.departure.estimated,
-        arrival_time: flight.arrival.estimated,
-        status: flight.flight_status,
-      }));
-
-      return { flights };
-    } catch (error) {
-      console.error("Error fetching flights from AviationStack:", error);
-      return { flights: [] };
-    }
-  },
-  
-
-  createFlightBooking: async (bookingData) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/book-flight/`, bookingData);
-      return { 
-        success: true, 
+      return {
+        success: true,
         booking: response.data.booking,
-        message: response.data.message
+        message: response.data.message,
       };
     } catch (error) {
-      console.error("Error creating flight booking:", error);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Booking failed' 
-      };
+      return { success: false, message: error.response?.data?.message || "Booking failed" };
     }
   },
-
-  fetchOSMRestaurants: async (lat, lon, radius = 1000) => {
-    const url = `https://overpass-api.de/api/interpreter?data=[out:json];node(around:${radius},${lat},${lon})["amenity"="restaurant"];out body;`;
+  getAvailableSeats: async (flightId) => {
     try {
-      const response = await fetch(url);
-      const data = await response.json();
-      return data.elements.map((place) => ({
+      const response = await axios.get(`http://localhost:8000/flights/${flightId}/available-seats/`);
+        return response.data.available_seats;
+    } catch (error) {
+        console.error("Error fetching available seats:", error);
+        return [];
+    }
+},
+
+
+  // 🔹 Fetch OpenStreetMap Restaurants
+  fetchOSMRestaurants: async (lat, lon, radius = 1000) => {
+    try {
+      const response = await axios.get(
+        `https://overpass-api.de/api/interpreter`,
+        {
+          params: {
+            data: `[out:json];node(around:${radius},${lat},${lon})["amenity"="restaurant"];out body;`,
+          },
+        }
+      );
+      return response.data.elements.map((place) => ({
         id: place.id,
         name: place.tags.name || "Unknown",
         website: place.tags.website || null,
         phone: place.tags["contact:phone"] || null,
         reservation_link: place.tags["reservation:link"] || null,
         lat: place.lat,
-        lon: place.lon
+        lon: place.lon,
       }));
     } catch (error) {
-      console.error("Error fetching OSM restaurants:", error);
+      console.log(error);
       return [];
     }
   },
 
+  // 🔹 Fetch & Search Attractions
   fetchAttractions: async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/attractions/`);
+      const response = await apiClient.get(`/attractions/`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching attractions:", error);
-      return { error: "Failed to fetch attractions" };
+      return handleError(error);
     }
   },
 
   searchAttractions: async (query) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/attractions/?query=${query}`);
-      console.log("Attractions Data:", response.data);
+      const response = await apiClient.get(`/attractions/`, { params: { query } });
       return response.data;
     } catch (error) {
-      console.error("Error searching attractions:", error);
-        return [];
+      console.log(error);
+      return [];
     }
   },
 
   fetchAttractionById: async (id) => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/attractions/${id}/`);
+      const response = await apiClient.get(`/attractions/${id}/`);
       return response.data;
     } catch (error) {
-      console.error("Error fetching attraction details:", error);
-      return { error: "Failed to fetch attraction details" };
+      return handleError(error);
     }
   },
 
-  // Users API
+  // 🔹 User Authentication APIs
   registerUser: async (userData) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/register/`, userData);
+      const response = await apiClient.post(`/auth/register/`, userData);
       return response.data;
     } catch (error) {
-      console.error("Error registering user:", error);
-      return { error: "Failed to register user" };
+      return handleError(error);
     }
   },
 
   loginUser: async (credentials) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login/`, credentials);
+      const response = await apiClient.post(`/auth/login/`, credentials);
+      localStorage.setItem("token", response.data.token); // Store token after login
       return response.data;
     } catch (error) {
-      console.error("Error logging in:", error);
-      return { error: "Failed to login" };
+      return handleError(error);
+    }
+  },
+
+  logoutUser: async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return { message: "No user logged in" };
+
+      await apiClient.post(`/auth/logout/`, null, {
+        headers: { Authorization: `Token ${token}` },
+      });
+
+      localStorage.removeItem("token");
+      return { message: "Logged out successfully" };
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  getUserProfile: async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return { error: "User not logged in" };
+
+      const response = await apiClient.get(`/auth/profile/`, {
+        headers: { Authorization: `Token ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      return handleError(error);
     }
   },
 };

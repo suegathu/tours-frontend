@@ -1,13 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "./FlightBooking.css"; // Import CSS for styling
+import { useParams } from "react-router-dom";
+import "./FlightBooking.css"; 
 
-const FlightBooking = ({ flight }) => {
+const FlightBooking = () => {
+  const { id } = useParams(); 
+  const [flight, setFlight] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [passengerName, setPassengerName] = useState("");
   const [email, setEmail] = useState("");
   const [bookingSuccess, setBookingSuccess] = useState(null);
-  const [error, setError] = useState("");
 
+  // Fetch Flight Details
+  useEffect(() => {
+    const fetchFlightDetails = async () => {
+      try {
+        const response = await axios.get(`http://localhost:8000/api/flights/${id}/`);
+        setFlight(response.data);
+      } catch (err) {
+        setError("Failed to load flight details.");
+        console.log(err)
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFlightDetails();
+  }, [id]);
+
+  // Handle Flight Booking
   const handleBooking = async (e) => {
     e.preventDefault();
     setError("");
@@ -20,54 +41,59 @@ const FlightBooking = ({ flight }) => {
 
     try {
       const response = await axios.post("http://localhost:8000/api/book-flight/", {
-        flight: flight.id,
+        flight: id,
         passenger_name: passengerName,
         email: email,
       });
 
       if (response.data.success) {
-        setBookingSuccess("Flight booked successfully!");
+        setBookingSuccess("Flight booked successfully! Check your email for confirmation.");
       } else {
         setError(response.data.message);
       }
-    } catch (error) {
-      console.error("Error booking flight:", error);
+    } catch (err) {
+      console.error("Error booking flight:", err);
       setError("Failed to book flight. Please try again.");
     }
   };
 
   return (
     <div className="booking-container">
-      <h2>Book Flight: {flight.flight_number}</h2>
-      <p>
-        {flight.departure_airport} ➝ {flight.arrival_airport}
-      </p>
-      <p>Price: ${flight.price}</p>
+      {loading ? (
+        <p>Loading flight details...</p>
+      ) : error ? (
+        <p className="error-message">{error}</p>
+      ) : (
+        <>
+          <h2>Book Flight: {flight.flight_number}</h2>
+          <p>{flight.departure_airport} ➝ {flight.arrival_airport}</p>
+          <p>Price: ${flight.price}</p>
 
-      <form onSubmit={handleBooking} className="booking-form">
-        <input
-          type="text"
-          placeholder="Passenger Name"
-          value={passengerName}
-          onChange={(e) => setPassengerName(e.target.value)}
-          required
-        />
+          <form onSubmit={handleBooking} className="booking-form">
+            <input
+              type="text"
+              placeholder="Passenger Name"
+              value={passengerName}
+              onChange={(e) => setPassengerName(e.target.value)}
+              required
+            />
 
-        <input
-          type="email"
-          placeholder="Email Address"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+            <input
+              type="email"
+              placeholder="Email Address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
 
-        <button type="submit" className="book-button">
-          Confirm Booking
-        </button>
-      </form>
+            <button type="submit" className="book-button">
+              Confirm Booking
+            </button>
+          </form>
 
-      {bookingSuccess && <p className="success-message">{bookingSuccess}</p>}
-      {error && <p className="error-message">{error}</p>}
+          {bookingSuccess && <p className="success-message">{bookingSuccess}</p>}
+        </>
+      )}
     </div>
   );
 };
