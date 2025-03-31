@@ -58,17 +58,18 @@ const BookFlight = () => {
             setError("Please select a seat.");
             return;
         }
-
+    
         try {
-            const bookingData = { flight_id: flightId, seat_number: selectedSeat };
-            const response = await api.bookFlight(bookingData);
+            const response = await api.bookFlight(flightId, selectedSeat);
             console.log("Booking Response:", response);
-
+    
             if (response && response.success) {
-                setMessage(`Booking successful! Booking ID: ${response.booking.id}`);
+                setMessage(`Booking successful! Booking ID: ${response.booking_id}`);
                 setError("");
-                setSelectedSeat(""); // ✅ Reset seat selection
-                fetchAvailableSeats(); // ✅ Refresh seats after booking
+                setSelectedSeat("");
+    
+                // Redirect to the check-in page
+                navigate(`/checkin?booking_id=${response.booking_id}`);
             } else {
                 throw new Error(response.message || "Booking failed. Please try again.");
             }
@@ -77,6 +78,7 @@ const BookFlight = () => {
             setError(err.message || "An error occurred while booking the flight.");
         }
     };
+    
 
     return (
         <Container>

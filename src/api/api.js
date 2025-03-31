@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY;
 
 // Axios instance for API requests
@@ -107,32 +107,33 @@ const api = {
   },
 
   // 🔹 Create Flight Booking (with Authentication)
-  bookFlight: async (flightId, seatNumber) => {
+  bookFlight: async (flightNumber, seatNumber) => {
     try {
-      const token = getAuthToken();
-      if (!token) {
-        return { success: false, message: "User not authenticated. Please log in." };
-      }
-
-      const response = await apiClient.post(
-        `/book-flight/`,
-        { flightId, seatNumber },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const token = getAuthToken();
+        if (!token) {
+            return { success: false, message: "User not authenticated. Please log in." };
         }
-      );
 
-      return {
-        success: true,
-        booking: response.data.booking,
-        message: response.data.message,
-      };
+        const response = await apiClient.post(
+            `${API_BASE_URL}/book-flight/`,  // Ensure correct API path
+            { flight_number: flightNumber, seat_number: seatNumber },
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            }
+        );
+
+        return {
+            success: true,
+            booking: response.data,
+            message: "Flight booked successfully",
+        };
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Booking failed" };
+        return { success: false, message: error.response?.data?.error || "Booking failed" };
     }
-  },
+},
+
   getAvailableSeats: async (flightId) => {
     try {
       const response = await axios.get(`http://localhost:8000/flights/${flightId}/available-seats/`);
