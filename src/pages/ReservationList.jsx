@@ -4,7 +4,7 @@ const ReservationList = () => {
   const [reservations, setReservations] = useState([]);
 
   useEffect(() => {
-    fetch("https://tours-backend-vy6o.onrender.com/reservations/reservations/")
+    fetch("https://tours-backend-vy6o.onrender.com/restaurants/reservations/")
       .then((res) => res.json())
       .then((data) => setReservations(data))
       .catch((err) => console.error(err));
