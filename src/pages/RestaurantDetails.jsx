@@ -7,7 +7,7 @@ const RestaurantDetail = () => {
   const [restaurant, setRestaurant] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8000/restaurants/${id}/`)
+    fetch(`https://tours-backend-vy6o.onrender.com/restaurants/restaurants/${id}/`)
       .then((res) => res.json())
       .then((data) => setRestaurant(data))
       .catch((err) => console.error(err));

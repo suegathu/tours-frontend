@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { useParams } from "react-router-dom";
 
 const FlightConfirmation = () => {
-  const { bookingId } = useParams();
+  
   const [scanResult, setScanResult] = useState("");
   const [message, setMessage] = useState("");
 
@@ -30,14 +29,14 @@ const FlightConfirmation = () => {
 
   const verifyQrCode = () => {
     axios
-      .get(`http://127.0.0.1:8000/api/verify/${scanResult}/`, {
+      .get(`https://tours-backend-vy6o.onrender.com/api/verify/${scanResult}/`, {
         headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzMjU2NjYyLCJpYXQiOjE3NDMyNTQ4NjIsImp0aSI6ImY1ZTQ0MjJiMDEzYzQ0NmJiN2Q3M2RhNDg1OThjZDY4IiwidXNlcl9pZCI6MX0.gLLQCcVVkkVT5mcbOY3G-QMEXuUGBElLhPwBeqxOkbE` }
       })
       .then((res) => {
         setMessage(`QR Verified! Booking Status: ${res.data.status}`);
         
         // Send Confirmation Email
-        axios.post("http://127.0.0.1:8000/api/send-confirmation-email/", { booking_id: scanResult })
+        axios.post("https://tours-backend-vy6o.onrender.com/api/send-confirmation-email/", { booking_id: scanResult })
           .then(() => setMessage("Confirmation email sent!"))
           .catch(() => setMessage("Failed to send email."));
       })

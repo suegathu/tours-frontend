@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://tours-backend-vy6o.onrender.com/";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://tours-backend-vy6o.onrender.com";
 const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY;
 
 // Axios instance for API requests

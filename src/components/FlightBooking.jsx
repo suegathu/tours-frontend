@@ -73,8 +73,8 @@ const FlightBooking = () => {
         flight_class: bookingData.flightClass,
       };
 
-      // Make POST request to your Django backend
-      const response = await axios.post("http://127.0.0.1:8000/api/book-flight/", bookingPayload);
+      // Make POST request to your deployed backend (on Render)
+      const response = await axios.post("https://tours-backend-vy6o.onrender.com/api/book-flight/", bookingPayload);
 
       if (response.data && response.data.booking_id) {
         alert("Flight booked successfully! Booking ID: " + response.data.booking_id);

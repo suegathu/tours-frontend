@@ -16,7 +16,7 @@ const FlightBooking = () => {
   useEffect(() => {
     const fetchFlightDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/api/flights/${id}/`);
+        const response = await axios.get(`https://tours-backend-vy6o.onrender.com/flights/flights/${id}/`);
         setFlight(response.data);
       } catch (err) {
         setError("Failed to load flight details.");
@@ -40,7 +40,7 @@ const FlightBooking = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:8000/api/book-flight/", {
+      const response = await axios.post("https://tours-backend-vy6o.onrender.com/api/book-flight/", {
         flight: id,
         passenger_name: passengerName,
         email: email,

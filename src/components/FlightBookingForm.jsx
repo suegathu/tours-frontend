@@ -11,7 +11,7 @@ const FlightBookingForm = () => {
   const bookFlight = () => {
     axios
       .post(
-        "http://127.0.0.1:8000/api/book-flight/",
+        "https://tours-backend-vy6o.onrender.com/booking/book-flight/",
         { flight_id: flightId, seat_number: seatNumber },
         { headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzMjU2NjYyLCJpYXQiOjE3NDMyNTQ4NjIsImp0aSI6ImY1ZTQ0MjJiMDEzYzQ0NmJiN2Q3M2RhNDg1OThjZDY4IiwidXNlcl9pZCI6MX0.gLLQCcVVkkVT5mcbOY3G-QMEXuUGBElLhPwBeqxOkbE` } }
       )

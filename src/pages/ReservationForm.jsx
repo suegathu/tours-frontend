@@ -28,7 +28,7 @@ const ReservationForm = () => {
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:8000/restaurants/${restaurantId}/`);
+        const response = await axios.get(`https://tours-backend-vy6o.onrender.com/restaurants/${restaurantId}/`);
         setRestaurant(response.data);
       } catch (err) {
         setError('Failed to load restaurant details.', err);

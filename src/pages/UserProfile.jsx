@@ -14,7 +14,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
         try {
-          const response = await axios.get('http://localhost:8000/profile/', {
+          const response = await axios.get('https://tours-backend-vy6o.onrender.com/accounts/profile/', {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             }
@@ -60,15 +60,14 @@ const UserProfile = () => {
     }
   
     try {
-      // Ensure the request points to the correct backend URL (e.g., localhost:8000)
-      await axios.put('http://localhost:8000/profile/', formDataToSend, {
+      await axios.put('https://tours-backend-vy6o.onrender.com/accounts/profile/', formDataToSend, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
       setEditMode(false); // Disable edit mode after submitting
       // Optionally, refetch the data to reflect changes
-      const updatedProfileResponse = await axios.get('http://localhost:8000/profile/', {
+      const updatedProfileResponse = await axios.get('https://tours-backend-vy6o.onrender.com/accounts/profile/', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
