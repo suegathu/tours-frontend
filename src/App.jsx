@@ -12,9 +12,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import BookFlight from "./pages/BookFlight";
 import { Check } from "lucide-react";
-import CheckIn from "./pages/CheckIn";
 import ReservationSuccess from "./components/ReservationSuccess";
 import UserProfile from "./pages/UserProfile";
+import CheckIn from "./components/CheckIn"
 
 
 function App() {
@@ -33,8 +33,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/book-flight/:flightId" element={<BookFlight />} />
-        <Route path="/checkin" element={<CheckIn />} />
         <Route path="/profile" element={<UserProfile />} />
+        <Route path="/checkin" element={<CheckIn />} />
         <Route path="/reservation-success" element={<ReservationSuccess />} />
       </Routes>
     </Router>
