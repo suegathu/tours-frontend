@@ -74,31 +74,36 @@ const api = {
   // 🔹 Fetch Flights (Local API)
   fetchFlightsFromAviationStack: async (from, to) => {
     try {
-      const response = await axios.get(`http://api.aviationstack.com/v1/flights`, {
-        params: { access_key: import.meta.env.VITE_AVIATIONSTACK_API_KEY, dep_iata: from, arr_iata: to },
-      });
+        const response = await axios.get(`https://api.aviationstack.com/v1/flights`, {
+            params: {
+                access_key: import.meta.env.VITE_AVIATIONSTACK_API_KEY,
+                dep_iata: from,
+                arr_iata: to,
+            },
+        });
 
-      console.log("Full API Response:", response.data); // Check the full structure
+        console.log("Full API Response:", response.data); // Check the full structure
 
-      if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
-        console.error("Unexpected API response format:", response.data);
-        return [];
-      }
+        if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
+            console.error("Unexpected API response format:", response.data);
+            return [];
+        }
 
-      return response.data.data.map((flight) => ({
-        flight_number: flight.flight?.iata || "N/A",
-        airline: flight.airline?.name || "Unknown Airline",
-        departure_airport: flight.departure?.airport || "Unknown Airport",
-        arrival_airport: flight.arrival?.airport || "Unknown Airport",
-        departure_time: flight.departure?.estimated || "Unknown Time",
-        arrival_time: flight.arrival?.estimated || "Unknown Time",
-        status: flight.flight_status || "Unknown",
-      }));
+        return response.data.data.map((flight) => ({
+            flight_number: flight.flight?.iata || "N/A",
+            airline: flight.airline?.name || "Unknown Airline",
+            departure_airport: flight.departure?.airport || "Unknown Airport",
+            arrival_airport: flight.arrival?.airport || "Unknown Airport",
+            departure_time: flight.departure?.estimated || "Unknown Time",
+            arrival_time: flight.arrival?.estimated || "Unknown Time",
+            status: flight.flight_status || "Unknown",
+        }));
     } catch (error) {
-      console.error("Error fetching flights:", error);
-      return []; // Ensure an array is returned
+        console.error("Error fetching flights:", error);
+        return []; // Ensure an array is returned
     }
-  },
+},
+
 
   // 🔹 Fetch Flight Details
   fetchFlightDetails: async (flightId) => {
