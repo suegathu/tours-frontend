@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://tours-backend-vy6o.onrender.com/";
 const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY;
 
 // Axios instance for API requests
@@ -22,7 +22,7 @@ const api = {
   // 🔹 Fetch Hotels
   searchHotels: async (query) => {
     try {
-      const response = await apiClient.get(`/api/hotels/search_locations/`, {
+      const response = await apiClient.get(`/api/hotels/`, {
         params: { query },
       });
       return response.data;
@@ -34,7 +34,7 @@ const api = {
   // 🔹 Fetch Restaurants
   fetchRestaurants: async () => {
     try {
-      const response = await apiClient.get(`/restaurants/`);
+      const response = await apiClient.get(`/restaurants/restaurants/`);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -44,8 +44,7 @@ const api = {
   // 🔹 Search Restaurants
   searchRestaurants: async (query) => {
     try {
-      const response = await apiClient.get(`/restaurants/fetch_restaurants`, { params: { location: query } });
-      // Extract restaurants array from the response
+      const response = await apiClient.get(`/restaurants/restaurants/`, { params: { location: query } });
       if (response.data && Array.isArray(response.data.restaurants)) {
         return response.data.restaurants;
       } else {
@@ -63,7 +62,7 @@ const api = {
       const token = getAuthToken();
       if (!token) return { error: "Authentication required. Please log in." };
 
-      const response = await apiClient.post(`/reservations/`, reservationData, {
+      const response = await apiClient.post(`/restaurants/reservations/`, reservationData, {
         headers: { Authorization: `Token ${token}` },
       });
       return response.data;
@@ -72,39 +71,20 @@ const api = {
     }
   },
 
-  // 🔹 Fetch Flights (Local API)
-  fetchFlightsFromAviationStack: async (from, to) => {
+  // 🔹 Fetch Flights
+  fetchFlights: async () => {
     try {
-      const response = await axios.get(`http://api.aviationstack.com/v1/flights`, {
-        params: { access_key: API_KEY, dep_iata: from, arr_iata: to },
-      });
-  
-      console.log("Full API Response:", response.data); // Check the full structure
-  
-      if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
-        console.error("Unexpected API response format:", response.data);
-        return [];
-      }
-  
-      return response.data.data.map((flight) => ({
-        flight_number: flight.flight?.iata || "N/A",
-        airline: flight.airline?.name || "Unknown Airline",
-        departure_airport: flight.departure?.airport || "Unknown Airport",
-        arrival_airport: flight.arrival?.airport || "Unknown Airport",
-        departure_time: flight.departure?.estimated || "Unknown Time",
-        arrival_time: flight.arrival?.estimated || "Unknown Time",
-        status: flight.flight_status || "Unknown",
-      }));
+      const response = await apiClient.get(`/bookings/fetch-flights/`);
+      return response.data;
     } catch (error) {
-      console.error("Error fetching flights:", error);
-      return []; // Ensure an array is returned
+      return handleError(error);
     }
   },
 
   // 🔹 Fetch Flight Details
-  fetchFlightDetails: async (flightId) => {
+  fetchFlightDetails: async (bookingId) => {
     try {
-      const response = await apiClient.get(`/flights/${flightId}/`);
+      const response = await apiClient.get(`/bookings/${bookingId}/`);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -114,124 +94,77 @@ const api = {
   // 🔹 Create Flight Booking (with Authentication)
   bookFlight: async (flightNumber, seatNumber) => {
     try {
-        const token = getAuthToken();
-        if (!token) {
-            return { success: false, message: "User not authenticated. Please log in." };
-        }
-
-        const response = await apiClient.post(
-            `${API_BASE_URL}/book-flight/`,  // Ensure correct API path
-            { flight_number: flightNumber, seat_number: seatNumber },
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            }
-        );
-
-        return {
-            success: true,
-            booking: response.data,
-            message: "Flight booked successfully",
-        };
-    } catch (error) {
-        return { success: false, message: error.response?.data?.error || "Booking failed" };
-    }
-},
-
-  getAvailableSeats: async (flightId) => {
-    try {
-      const response = await axios.get(`http://localhost:8000/flights/${flightId}/available-seats/`);
-        return response.data.available_seats;
-    } catch (error) {
-        console.error("Error fetching available seats:", error);
-        return [];
-    }
-},
-getBookingDetails: async (bookingId) => {
-  if (!bookingId) throw new Error("Booking ID is required.");
-
-  const url = `http://127.0.0.1:8000/bookings/${bookingId}/`; // Use the correct endpoint
-  console.log("Fetching booking details from:", url);
-
-  try {
-      const response = await fetch(url, {
-          method: "GET",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-      });
-
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
+      const token = getAuthToken();
+      if (!token) {
+        return { success: false, message: "User not authenticated. Please log in." };
       }
 
-      return await response.json();
-  } catch (error) {
-      console.error("API error:", error);
-      throw error;
-  }
-},
-
-
-checkInFlight: async (bookingId) => {
-  if (!bookingId) {
-      throw new Error("Booking ID is required for check-in.");
-  }
-
-  try {
-      const response = await fetch(`http://127.0.0.1:8000/check-in/${bookingId}/`, {
-          method: "GET",
-          headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-      });
-
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
-      }
-
-      return await response.json();
-  } catch (error) {
-      console.error("Check-in failed:", error.message);
-      throw error;
-  }
-},
-
-  // 🔹 Fetch OpenStreetMap Restaurants
-  fetchOSMRestaurants: async (lat, lon, radius = 1000) => {
-    try {
-      const response = await axios.get(
-        `https://overpass-api.de/api/interpreter`,
+      const response = await apiClient.post(
+        `/bookings/book-flight/`,
+        { flight_number: flightNumber, seat_number: seatNumber },
         {
-          params: {
-            data: `[out:json];node(around:${radius},${lat},${lon})["amenity"="restaurant"];out body;`,
+          headers: {
+            Authorization: `Bearer ${token}`,
           },
         }
       );
-      return response.data.elements.map((place) => ({
-        id: place.id,
-        name: place.tags.name || "Unknown",
-        website: place.tags.website || null,
-        phone: place.tags["contact:phone"] || null,
-        reservation_link: place.tags["reservation:link"] || null,
-        lat: place.lat,
-        lon: place.lon,
-      }));
+
+      return {
+        success: true,
+        booking: response.data,
+        message: "Flight booked successfully",
+      };
     } catch (error) {
-      console.log(error);
+      return { success: false, message: error.response?.data?.error || "Booking failed" };
+    }
+  },
+
+  // 🔹 Get Available Seats for a Flight
+  getAvailableSeats: async (flightNumber) => {
+    try {
+      const response = await apiClient.get(`/bookings/flights/${flightNumber}/available-seats/`);
+      return response.data.available_seats;
+    } catch (error) {
+      console.error("Error fetching available seats:", error);
       return [];
     }
   },
 
-  // 🔹 Fetch & Search Attractions
+  // 🔹 Get Booking Details
+  getBookingDetails: async (bookingId) => {
+    try {
+      const response = await apiClient.get(`/bookings/${bookingId}/`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      return handleError(error);
+    }
+  },
+
+  // 🔹 Check-In Flight
+  checkInFlight: async (bookingId) => {
+    try {
+      const response = await apiClient.get(`/bookings/check-in/${bookingId}/`, {
+        headers: {
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error("Check-in failed:", error.message);
+      return handleError(error);
+    }
+  },
+
+  // 🔹 Fetch Attractions
   fetchAttractions: async () => {
     try {
-      const response = await apiClient.get(`/attractions/`);
+      const response = await apiClient.get(`/attractions/attractions/`);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -240,17 +173,17 @@ checkInFlight: async (bookingId) => {
 
   searchAttractions: async (query) => {
     try {
-      const response = await apiClient.get(`/attractions/`, { params: { query } });
+      const response = await apiClient.get(`/attractions/attractions/`, { params: { query } });
       return response.data;
     } catch (error) {
-      console.log(error);
+      console.log(error)
       return [];
     }
   },
 
   fetchAttractionById: async (id) => {
     try {
-      const response = await apiClient.get(`/attractions/${id}/`);
+      const response = await apiClient.get(`/attractions/attractions/${id}/`);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -260,7 +193,7 @@ checkInFlight: async (bookingId) => {
   // 🔹 User Authentication APIs
   registerUser: async (userData) => {
     try {
-      const response = await apiClient.post(`/auth/register/`, userData);
+      const response = await apiClient.post(`/accounts/auth/register/`, userData);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -269,8 +202,8 @@ checkInFlight: async (bookingId) => {
 
   loginUser: async (credentials) => {
     try {
-      const response = await apiClient.post(`/auth/login/`, credentials);
-      localStorage.setItem("token", response.data.token); // Store token after login
+      const response = await apiClient.post(`/accounts/auth/login/`, credentials);
+      localStorage.setItem("token", response.data.token);
       return response.data;
     } catch (error) {
       return handleError(error);
@@ -282,7 +215,7 @@ checkInFlight: async (bookingId) => {
       const token = getAuthToken();
       if (!token) return { message: "No user logged in" };
 
-      await apiClient.post(`/auth/logout/`, null, {
+      await apiClient.post(`/accounts/auth/logout/`, null, {
         headers: { Authorization: `Token ${token}` },
       });
 
@@ -298,7 +231,7 @@ checkInFlight: async (bookingId) => {
       const token = getAuthToken();
       if (!token) return { error: "User not logged in" };
 
-      const response = await apiClient.get(`/auth/profile/`, {
+      const response = await apiClient.get(`/accounts/profile/`, {
         headers: { Authorization: `Token ${token}` },
       });
       return response.data;
