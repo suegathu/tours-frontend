@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 const ReservationSuccess = () => {
     return (
       <div className="container mx-auto p-4 max-w-2xl">

@@ -14,6 +14,7 @@ import BookFlight from "./pages/BookFlight";
 import { Check } from "lucide-react";
 import CheckIn from "./pages/Checkin";
 import ReservationSuccess from "./components/ReservationSuccess";
+import UserProfile from "./pages/UserProfile";
 
 
 function App() {
@@ -33,6 +34,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/book-flight/:flightId" element={<BookFlight />} />
         <Route path="/checkin" element={<CheckIn />} />
+        <Route path="/profile" element={<UserProfile />} />
         <Route path="/reservation-success" element={<ReservationSuccess />} />
       </Routes>
     </Router>
