@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css'
 
-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com";
+const API_BASE_URL = "https://tours-backend-vy6o.onrender.com/accounts";
 
 const Login = () => {
   const [username, setUsername] = useState('');
