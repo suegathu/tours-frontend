@@ -27,7 +27,7 @@ function AttractionCard({ attraction }) {
       </div>
 
       <div className="button-group">
-        <a href={`/attractions/${attraction.id}`} className="view-button">
+        <a href={`/attractions/attractions/${attraction.id}`} className="view-button">
           View Details
         </a>
         

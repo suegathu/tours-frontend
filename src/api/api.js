@@ -82,7 +82,7 @@ const api = {
             },
         });
 
-        console.log("Full API Response:", response.data); // Check the full structure
+        console.log("Full API Response:", response.data); 
 
         if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
             console.error("Unexpected API response format:", response.data);
@@ -100,7 +100,7 @@ const api = {
         }));
     } catch (error) {
         console.error("Error fetching flights:", error);
-        return []; // Ensure an array is returned
+        return []; 
     }
 },
 
