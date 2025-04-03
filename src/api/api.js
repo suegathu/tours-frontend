@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 const API_KEY = import.meta.env.VITE_AVIATIONSTACK_API_KEY;
 
 // Axios instance for API requests
@@ -10,7 +10,7 @@ const apiClient = axios.create({
 });
 
 // Function to get auth token from local storage
-const getAuthToken = () => localStorage.getItem("token");
+export const getAuthToken = () => localStorage.getItem("token");
 
 // Helper function to handle errors
 const handleError = (error) => {
@@ -43,10 +43,15 @@ const api = {
 
   // 🔹 Search Restaurants
   searchRestaurants: async (query) => {
-    // /restaurants/fetch_restaurants/?location=Nairobi/
     try {
       const response = await apiClient.get(`/restaurants/fetch_restaurants`, { params: { location: query } });
-      return response.data;
+      // Extract restaurants array from the response
+      if (response.data && Array.isArray(response.data.restaurants)) {
+        return response.data.restaurants;
+      } else {
+        console.error("Unexpected response format:", response.data);
+        return [];
+      }
     } catch (error) {
       return handleError(error);
     }
@@ -58,7 +63,7 @@ const api = {
       const token = getAuthToken();
       if (!token) return { error: "Authentication required. Please log in." };
 
-      const response = await apiClient.post(`/restaurants/reservations/`, reservationData, {
+      const response = await apiClient.post(`/reservations/`, reservationData, {
         headers: { Authorization: `Token ${token}` },
       });
       return response.data;
@@ -143,25 +148,33 @@ const api = {
         return [];
     }
 },
- getBookingDetails:async (bookingId) => {
-  const url = `http://127.0.0.1:8000/check-in/${bookingId}/`;
-  console.log("API request to:", url);
+getBookingDetails: async (bookingId) => {
+  if (!bookingId) throw new Error("Booking ID is required.");
+
+  const url = `http://127.0.0.1:8000/bookings/${bookingId}/`; // Use the correct endpoint
+  console.log("Fetching booking details from:", url);
 
   try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+          method: "GET",
+          headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+      });
 
-      // Ensure response is valid JSON
       if (!response.ok) {
-          throw new Error(`Server error: ${response.status} ${response.statusText}`);
+          const errorData = await response.json();
+          throw new Error(errorData.message || `Error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      return data;
+      return await response.json();
   } catch (error) {
       console.error("API error:", error);
       throw error;
   }
 },
+
 
 checkInFlight: async (bookingId) => {
   if (!bookingId) {

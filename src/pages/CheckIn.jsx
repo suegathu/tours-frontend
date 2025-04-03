@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import api from "../api/api"; // Adjust API import accordingly
+import api, { API_BASE_URL } from "../api/api"; 
 import { Container, Typography, CircularProgress, Alert, Button } from "@mui/material";
 
 const CheckIn = () => {
     const [searchParams] = useSearchParams();
     const bookingId = searchParams.get("booking_id");
+
     const [bookingDetails, setBookingDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -15,7 +16,6 @@ const CheckIn = () => {
 
     useEffect(() => {
         if (!bookingId) {
-            console.error("No booking ID found in URL.");
             setError("Invalid booking ID.");
             setLoading(false);
             return;
@@ -23,17 +23,13 @@ const CheckIn = () => {
 
         const fetchBookingDetails = async () => {
             try {
-                console.log("Fetching booking details for ID:", bookingId);
                 const response = await api.getBookingDetails(bookingId);
-
                 if (!response || typeof response !== "object") {
                     throw new Error("Invalid response format. Expected JSON.");
                 }
-
                 setBookingDetails(response);
             } catch (err) {
-                console.error("Error fetching booking details:", err);
-                setError("Failed to retrieve booking details.");
+                setError(err.message || "Failed to retrieve booking details.");
             } finally {
                 setLoading(false);
             }
@@ -55,17 +51,16 @@ const CheckIn = () => {
         try {
             const response = await api.checkInFlight(bookingId);
 
-            if (response && response.booking_status === "checked_in") {
+            if (response?.booking_status === "checked_in") {
                 setCheckInSuccess("Check-in successful!");
                 setBookingDetails((prevDetails) => ({
                     ...prevDetails,
                     status: "checked_in",
                 }));
             } else {
-                throw new Error(response.message || "Check-in failed.");
+                throw new Error(response?.message || "Check-in failed.");
             }
         } catch (err) {
-            console.error("Check-in error:", err);
             setCheckInError(err.message);
         } finally {
             setCheckInLoading(false);
@@ -74,19 +69,26 @@ const CheckIn = () => {
 
     return (
         <Container>
-            <Typography variant="h4">Flight Check-In</Typography>
+            <Typography variant="h4" gutterBottom>
+                Flight Check-In
+            </Typography>
 
             {loading && <CircularProgress />}
             {error && <Alert severity="error">{error}</Alert>}
 
-            {bookingDetails && (
+            {bookingDetails && !loading && (
                 <div>
                     <Typography variant="h6">Booking ID: {bookingDetails.id}</Typography>
                     <Typography>Flight: {bookingDetails.flight}</Typography>
                     <Typography>Seat: {bookingDetails.seat}</Typography>
                     <Typography>Status: {bookingDetails.status}</Typography>
+                    
                     {bookingDetails.qr_code_url && (
-                        <img src={bookingDetails.qr_code_url} alt="QR Code for Check-in" />
+                        <img 
+                            src={`${API_BASE_URL}${bookingDetails.qr_code_url}`} 
+                            alt="QR Code for Check-in" 
+                            style={{ marginTop: "10px", width: "150px", height: "150px" }}
+                        />
                     )}
 
                     {bookingDetails.status !== "checked_in" && (
@@ -101,8 +103,8 @@ const CheckIn = () => {
                         </Button>
                     )}
 
-                    {checkInSuccess && <Alert severity="success">{checkInSuccess}</Alert>}
-                    {checkInError && <Alert severity="error">{checkInError}</Alert>}
+                    {checkInSuccess && <Alert severity="success" style={{ marginTop: "10px" }}>{checkInSuccess}</Alert>}
+                    {checkInError && <Alert severity="error" style={{ marginTop: "10px" }}>{checkInError}</Alert>}
                 </div>
             )}
         </Container>

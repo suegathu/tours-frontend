@@ -40,6 +40,7 @@ const Register = () => {
       <h2>Register</h2>
       {error && <p className="error">{error}</p>}
       <form onSubmit={handleRegister}>
+        
       <input
           type="username"
           placeholder="username"
