@@ -12,7 +12,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import BookFlight from "./pages/BookFlight";
 import { Check } from "lucide-react";
-import CheckIn from "./pages/Checkin";
+import CheckIn from "./pages/CheckIn";
 import ReservationSuccess from "./components/ReservationSuccess";
 import UserProfile from "./pages/UserProfile";
 
