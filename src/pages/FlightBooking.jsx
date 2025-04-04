@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import "./FlightBooking.css"; 
+import { API_BASE_URL } from "../api/api";
 
 const FlightBooking = () => {
   const { id } = useParams(); 
@@ -16,7 +17,7 @@ const FlightBooking = () => {
   useEffect(() => {
     const fetchFlightDetails = async () => {
       try {
-        const response = await axios.get(`https://tours-backend-vy6o.onrender.com/flights/flights/${id}/`);
+        const response = await axios.get(`${API_BASE_URL}/flights/flights/${id}/`);
         setFlight(response.data);
       } catch (err) {
         setError("Failed to load flight details.");
@@ -40,7 +41,7 @@ const FlightBooking = () => {
     }
 
     try {
-      const response = await axios.post("https://tours-backend-vy6o.onrender.com/api/book-flight/", {
+      const response = await axios.post(`${API_BASE_URL}/api/book-flight/`, {
         flight: id,
         passenger_name: passengerName,
         email: email,

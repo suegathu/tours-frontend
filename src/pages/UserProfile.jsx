@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../api/api';
 
 const UserProfile = () => {
   const [profile, setProfile] = useState(null);
@@ -14,7 +15,7 @@ const UserProfile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
         try {
-          const response = await axios.get('https://tours-backend-vy6o.onrender.com/accounts/profile/', {
+          const response = await axios.get(`${API_BASE_URL}/accounts/profile/`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             }
@@ -60,14 +61,14 @@ const UserProfile = () => {
     }
   
     try {
-      await axios.put('https://tours-backend-vy6o.onrender.com/accounts/profile/', formDataToSend, {
+      await axios.put(`${API_BASE_URL}/accounts/profile/`, formDataToSend, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
       setEditMode(false); // Disable edit mode after submitting
       // Optionally, refetch the data to reflect changes
-      const updatedProfileResponse = await axios.get('https://tours-backend-vy6o.onrender.com/accounts/profile/', {
+      const updatedProfileResponse = await axios.get(`${API_BASE_URL}/accounts/profile/`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

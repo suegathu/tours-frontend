@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./FlightBooking.css";
+import { API_BASE_URL } from "../api/api";
 
 const FlightBooking = () => {
   const location = useLocation();
@@ -74,7 +75,7 @@ const FlightBooking = () => {
       };
 
       // Make POST request to your deployed backend (on Render)
-      const response = await axios.post("https://tours-backend-vy6o.onrender.com/api/book-flight/", bookingPayload);
+      const response = await axios.post(`${API_BASE_URL}/api/book-flight/`, bookingPayload);
 
       if (response.data && response.data.booking_id) {
         alert("Flight booked successfully! Booking ID: " + response.data.booking_id);

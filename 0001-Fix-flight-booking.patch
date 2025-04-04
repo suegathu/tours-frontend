@@ -1,0 +1,628 @@
+From 0ec4f159f8e167d9a753d57a8d424eda42007b09 Mon Sep 17 00:00:00 2001
+From: Suegathh <suzzainnegathu@gmail.com>
+Date: Fri, 4 Apr 2025 02:14:37 +0300
+Subject: [PATCH] Fix flight booking
+
+---
+ .env.development                      |   1 +
+ index.html                            |   2 +-
+ src/api/api.js                        | 153 ++++++++++++++++++--------
+ src/components/FlightBooking.jsx      |   3 +-
+ src/components/FlightBookingForm.jsx  |   3 +-
+ src/components/FlightConfirmation.jsx |   5 +-
+ src/components/FlightList.jsx         |   4 +-
+ src/components/RestaurantDetails.jsx  |   6 +-
+ src/pages/FlightBooking.jsx           |   5 +-
+ src/pages/Home.jsx                    |   6 +-
+ src/pages/Login.jsx                   |   7 +-
+ src/pages/Register.jsx                |   5 +-
+ src/pages/ReservationForm.jsx         |  12 +-
+ src/pages/ReservationList.jsx         |   3 +-
+ src/pages/RestaurantDetails.jsx       |   3 +-
+ src/pages/RestaurantList.jsx          |   4 +-
+ src/pages/UserProfile.jsx             |   7 +-
+ 17 files changed, 149 insertions(+), 80 deletions(-)
+ create mode 100644 .env.development
+
+diff --git a/.env.development b/.env.development
+new file mode 100644
+index 0000000..6c9bbfd
+--- /dev/null
++++ b/.env.development
+@@ -0,0 +1 @@
++VITE_API_BASE_URL=http://127.0.0.1:8000
+diff --git a/index.html b/index.html
+index 0c589ec..42beb30 100644
+--- a/index.html
++++ b/index.html
+@@ -4,7 +4,7 @@
+     <meta charset="UTF-8" />
+     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+-    <title>Vite + React</title>
++    <title>Travel With Sue</title>
+   </head>
+   <body>
+     <div id="root"></div>
+diff --git a/src/api/api.js b/src/api/api.js
+index 31dced2..766966a 100644
+--- a/src/api/api.js
++++ b/src/api/api.js
+@@ -1,6 +1,6 @@
+ import axios from "axios";
+ 
+-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://tours-backend-vy6o.onrender.com/";
++export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+ 
+ // Axios instance for API requests
+ const apiClient = axios.create({
+@@ -63,7 +63,7 @@ const api = {
+       if (!token) return { error: "Authentication required. Please log in." };
+ 
+       const response = await apiClient.post(`/restaurants/reservations/`, reservationData, {
+-        headers: { Authorization: `Token ${token}` },
++        headers: { Authorization: `Bearer ${token}` },
+       });
+       return response.data;
+     } catch (error) {
+@@ -71,38 +71,73 @@ const api = {
+     }
+   },
+ 
++  searchFlights: async (from, to) => {
++    try {
++      const token = getAuthToken();
++      if (!token) {
++        return { success: false, message: "User not authenticated. Please log in." };
++      }
++
++      const response = await apiClient.get(`/bookings/fetch-flights/`, {
++        params: { dep_iata: from, arr_iata: to },
++      }, {
++        headers: { Authorization: `Bearer ${token}` },
++      });
++
++      // Extract flights array from the response
++      if (Array.isArray(response.data)) {
++        return response.data.map((flight) => ({
++          flight_number: flight.flight_number,
++          airline: flight.airline,
++          departure_airport: flight.departure_airport,
++          arrival_airport: flight.arrival_airport,
++          departure_time: flight.departure_time,
++          arrival_time: flight.arrival_time,
++          status: flight.status,
++        }));
++
++      } else {
++        console.error("Unexpected response format:", response.data);
++        return [];
++      }
++    } catch (error) {
++      console.error("Error fetching flights:", error);
++      return handleError(error);
++    }
++  },
++
+   // 🔹 Fetch Flights (Local API)
+   fetchFlightsFromAviationStack: async (from, to) => {
+     try {
+-        const response = await axios.get(`https://api.aviationstack.com/v1/flights`, {
+-            params: {
+-                access_key: import.meta.env.VITE_AVIATIONSTACK_API_KEY,
+-                dep_iata: from,
+-                arr_iata: to,
+-            },
+-        });
++      const response = await axios.get(`https://api.aviationstack.com/v1/flights`, {
++        params: {
++          access_key: import.meta.env.VITE_AVIATIONSTACK_API_KEY,
++          dep_iata: from,
++          arr_iata: to,
++        },
++      });
+ 
+-        console.log("Full API Response:", response.data); 
++      console.log("Full API Response:", response.data);
+ 
+-        if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
+-            console.error("Unexpected API response format:", response.data);
+-            return [];
+-        }
++      if (!response.data || !response.data.data || !Array.isArray(response.data.data)) {
++        console.error("Unexpected API response format:", response.data);
++        return [];
++      }
+ 
+-        return response.data.data.map((flight) => ({
+-            flight_number: flight.flight?.iata || "N/A",
+-            airline: flight.airline?.name || "Unknown Airline",
+-            departure_airport: flight.departure?.airport || "Unknown Airport",
+-            arrival_airport: flight.arrival?.airport || "Unknown Airport",
+-            departure_time: flight.departure?.estimated || "Unknown Time",
+-            arrival_time: flight.arrival?.estimated || "Unknown Time",
+-            status: flight.flight_status || "Unknown",
+-        }));
++      return response.data.data.map((flight) => ({
++        flight_number: flight.flight?.iata || "N/A",
++        airline: flight.airline?.name || "Unknown Airline",
++        departure_airport: flight.departure?.airport || "Unknown Airport",
++        arrival_airport: flight.arrival?.airport || "Unknown Airport",
++        departure_time: flight.departure?.estimated || "Unknown Time",
++        arrival_time: flight.arrival?.estimated || "Unknown Time",
++        status: flight.flight_status || "Unknown",
++      }));
+     } catch (error) {
+-        console.error("Error fetching flights:", error);
+-        return []; 
++      console.error("Error fetching flights:", error);
++      return [];
+     }
+-},
++  },
+ 
+ 
+   // 🔹 Fetch Flight Details
+@@ -118,28 +153,28 @@ const api = {
+   // 🔹 Create Flight Booking (with Authentication)
+   bookFlight: async (flightNumber, seatNumber) => {
+     try {
+-        const token = getAuthToken();
+-        if (!token) {
+-            return { success: false, message: "User not authenticated. Please log in." };
++      const token = getAuthToken();
++      if (!token) {
++        return { success: false, message: "User not authenticated. Please log in." };
++      }
++
++      const response = await apiClient.post(
++        `/bookings/book-flight/`,
++        { flight_number: flightNumber, seat_number: seatNumber },
++        {
++          headers: {
++            Authorization: `Bearer ${token}`,
++          },
+         }
++      );
+ 
+-        const response = await apiClient.post(
+-            `/bookings/book-flight/`,  
+-            { flight_number: flightNumber, seat_number: seatNumber },
+-            {
+-                headers: {
+-                    Authorization: `Bearer ${token}`,
+-                },
+-            }
+-        );
+-
+-        return {
+-            success: true,
+-            booking: response.data,
+-            message: "Flight booked successfully",
+-        };
++      return {
++        success: true,
++        booking: response.data,
++        message: "Flight booked successfully",
++      };
+     } catch (error) {
+-        return { success: false, message: error.response?.data?.error || "Booking failed" };
++      return { success: false, message: error.response?.data?.error || "Booking failed" };
+     }
+   },
+ 
+@@ -224,7 +259,7 @@ const api = {
+       if (!token) return { message: "No user logged in" };
+ 
+       await apiClient.post(`/accounts/auth/logout/`, null, {
+-        headers: { Authorization: `Token ${token}` },
++        headers: { Authorization: `Bearer ${token}` },
+       });
+ 
+       localStorage.removeItem("token");
+@@ -240,13 +275,37 @@ const api = {
+       if (!token) return { error: "User not logged in" };
+ 
+       const response = await apiClient.get(`/accounts/auth/profile/`, {
+-        headers: { Authorization: `Token ${token}` },
++        headers: { Authorization: `Bearer ${token}` },
+       });
+       return response.data;
+     } catch (error) {
+       return handleError(error);
+     }
+   },
++
++  getAvailableSeats: async (flightNumber) => {
++    try {
++      const response = await apiClient.get(`/bookings/flights/${flightNumber}/available-seats/`);
++      return response.data;
++    } catch (error) {
++      console.error("Error fetching available seats:", error);
++      return { error: "Failed to fetch available seats." };
++    }
++  },
++
++  getBookingDetails: async (bookingId) => {
++    try {
++      const token = getAuthToken();
++      if (!token) return { error: "User not logged in" };
++
++      const response = await apiClient.get(`/bookings/bookings/${bookingId}/`, {
++        headers: { Authorization: `Bearer ${token}` },
++      });
++      return response.data;
++    } catch (error) {
++      return handleError(error);
++    }
++  }
+ };
+ 
+ export default api;
+diff --git a/src/components/FlightBooking.jsx b/src/components/FlightBooking.jsx
+index 8e4fafc..371c6ea 100644
+--- a/src/components/FlightBooking.jsx
++++ b/src/components/FlightBooking.jsx
+@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
+ import { useLocation, useNavigate } from "react-router-dom";
+ import axios from "axios";
+ import "./FlightBooking.css";
++import { API_BASE_URL } from "../api/api";
+ 
+ const FlightBooking = () => {
+   const location = useLocation();
+@@ -74,7 +75,7 @@ const FlightBooking = () => {
+       };
+ 
+       // Make POST request to your deployed backend (on Render)
+-      const response = await axios.post("https://tours-backend-vy6o.onrender.com/api/book-flight/", bookingPayload);
++      const response = await axios.post(`${API_BASE_URL}/api/book-flight/`, bookingPayload);
+ 
+       if (response.data && response.data.booking_id) {
+         alert("Flight booked successfully! Booking ID: " + response.data.booking_id);
+diff --git a/src/components/FlightBookingForm.jsx b/src/components/FlightBookingForm.jsx
+index d3719a9..8ab1938 100644
+--- a/src/components/FlightBookingForm.jsx
++++ b/src/components/FlightBookingForm.jsx
+@@ -1,6 +1,7 @@
+ import React, { useState } from "react";
+ import axios from "axios";
+ import { useParams, useNavigate } from "react-router-dom";
++import { API_BASE_URL } from "../api/api";
+ 
+ const FlightBookingForm = () => {
+   const { flightId } = useParams();
+@@ -11,7 +12,7 @@ const FlightBookingForm = () => {
+   const bookFlight = () => {
+     axios
+       .post(
+-        "https://tours-backend-vy6o.onrender.com/booking/book-flight/",
++        `${API_BASE_URL}/booking/book-flight/`,
+         { flight_id: flightId, seat_number: seatNumber },
+         { headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzMjU2NjYyLCJpYXQiOjE3NDMyNTQ4NjIsImp0aSI6ImY1ZTQ0MjJiMDEzYzQ0NmJiN2Q3M2RhNDg1OThjZDY4IiwidXNlcl9pZCI6MX0.gLLQCcVVkkVT5mcbOY3G-QMEXuUGBElLhPwBeqxOkbE` } }
+       )
+diff --git a/src/components/FlightConfirmation.jsx b/src/components/FlightConfirmation.jsx
+index 692268a..131065a 100644
+--- a/src/components/FlightConfirmation.jsx
++++ b/src/components/FlightConfirmation.jsx
+@@ -1,6 +1,7 @@
+ import React, { useState, useEffect } from "react";
+ import axios from "axios";
+ import { Html5QrcodeScanner } from "html5-qrcode";
++import { API_BASE_URL } from "../api/api";
+ 
+ const FlightConfirmation = () => {
+   
+@@ -29,14 +30,14 @@ const FlightConfirmation = () => {
+ 
+   const verifyQrCode = () => {
+     axios
+-      .get(`https://tours-backend-vy6o.onrender.com/api/verify/${scanResult}/`, {
++      .get(`${API_BASE_URL}/api/verify/${scanResult}/`, {
+         headers: { Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQzMjU2NjYyLCJpYXQiOjE3NDMyNTQ4NjIsImp0aSI6ImY1ZTQ0MjJiMDEzYzQ0NmJiN2Q3M2RhNDg1OThjZDY4IiwidXNlcl9pZCI6MX0.gLLQCcVVkkVT5mcbOY3G-QMEXuUGBElLhPwBeqxOkbE` }
+       })
+       .then((res) => {
+         setMessage(`QR Verified! Booking Status: ${res.data.status}`);
+         
+         // Send Confirmation Email
+-        axios.post("https://tours-backend-vy6o.onrender.com/api/send-confirmation-email/", { booking_id: scanResult })
++        axios.post(`${API_BASE_URL}/api/send-confirmation-email/`, { booking_id: scanResult })
+           .then(() => setMessage("Confirmation email sent!"))
+           .catch(() => setMessage("Failed to send email."));
+       })
+diff --git a/src/components/FlightList.jsx b/src/components/FlightList.jsx
+index 2b36542..87b8f6b 100644
+--- a/src/components/FlightList.jsx
++++ b/src/components/FlightList.jsx
+@@ -29,7 +29,7 @@ const FlightList = () => {
+     }
+ 
+     try {
+-      const flightsData = await api.fetchFlightsFromAviationStack(
++      const flightsData = await api.searchFlights(
+         search.from,
+         search.to,
+         search.date
+@@ -85,8 +85,6 @@ const FlightList = () => {
+       <Grid container spacing={2} style={{ marginTop: "20px" }}>
+         {flights.length > 0 ? (
+           flights.map((flight, index) => {
+-            console.log("Flight Data:", flight); // ✅ Debugging: Ensure ID exists
+-
+             const flightId = flight.id ?? flight.flight_number ?? null; // ✅ Use flight_number as backup
+ 
+             return (
+diff --git a/src/components/RestaurantDetails.jsx b/src/components/RestaurantDetails.jsx
+index b1859fd..7d0f04a 100644
+--- a/src/components/RestaurantDetails.jsx
++++ b/src/components/RestaurantDetails.jsx
+@@ -2,13 +2,13 @@ import axios from "axios";
+ import { useEffect, useState } from "react";
+ import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
+ 
+-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com";
++const API_BASE_URL = "API_BASE_URL";
+ 
+ function RestaurantDetail({ id }) {
+     const [restaurant, setRestaurant] = useState(null);
+   
+     useEffect(() => {
+-      axios.get(`${API_BASE_URL}/restaurants/${id}/`)
++      axios.get(`${API_BASE_URL}/restaurants/restaurants/${id}/`)
+         .then(response => setRestaurant(response.data))
+         .catch(error => console.error("Error fetching details:", error));
+     }, [id]);
+@@ -26,4 +26,4 @@ function RestaurantDetail({ id }) {
+     );
+   }
+   
+-export default RestaurantDetail;  
+\ No newline at end of file
++export default RestaurantDetail;  
+diff --git a/src/pages/FlightBooking.jsx b/src/pages/FlightBooking.jsx
+index ae9dbef..8301352 100644
+--- a/src/pages/FlightBooking.jsx
++++ b/src/pages/FlightBooking.jsx
+@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
+ import axios from "axios";
+ import { useParams } from "react-router-dom";
+ import "./FlightBooking.css"; 
++import { API_BASE_URL } from "../api/api";
+ 
+ const FlightBooking = () => {
+   const { id } = useParams(); 
+@@ -16,7 +17,7 @@ const FlightBooking = () => {
+   useEffect(() => {
+     const fetchFlightDetails = async () => {
+       try {
+-        const response = await axios.get(`https://tours-backend-vy6o.onrender.com/flights/flights/${id}/`);
++        const response = await axios.get(`${API_BASE_URL}/flights/flights/${id}/`);
+         setFlight(response.data);
+       } catch (err) {
+         setError("Failed to load flight details.");
+@@ -40,7 +41,7 @@ const FlightBooking = () => {
+     }
+ 
+     try {
+-      const response = await axios.post("https://tours-backend-vy6o.onrender.com/api/book-flight/", {
++      const response = await axios.post(`${API_BASE_URL}/api/book-flight/`, {
+         flight: id,
+         passenger_name: passengerName,
+         email: email,
+diff --git a/src/pages/Home.jsx b/src/pages/Home.jsx
+index 88b9273..9e00659 100644
+--- a/src/pages/Home.jsx
++++ b/src/pages/Home.jsx
+@@ -28,10 +28,6 @@ function Home() {
+     );
+   }, []);
+ 
+-  useEffect(() => {
+-    console.log(JSON.stringify({ activeLocation }));
+-  }, [activeLocation]);
+-
+   const handleSearch = async () => {
+     if (!query.trim()) {
+       setError("Please enter a location to search");
+@@ -271,4 +267,4 @@ function Home() {
+   );
+ }
+ 
+-export default Home;
+\ No newline at end of file
++export default Home;
+diff --git a/src/pages/Login.jsx b/src/pages/Login.jsx
+index 4758971..45513a2 100644
+--- a/src/pages/Login.jsx
++++ b/src/pages/Login.jsx
+@@ -2,8 +2,9 @@ import axios from 'axios';
+ import { useState } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import './Login.css'
++import { API_BASE_URL } from '../api/api';
+ 
+-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com/accounts";
++const BASE_URL = `${API_BASE_URL}/accounts`;
+ 
+ const Login = () => {
+   const [username, setUsername] = useState('');
+@@ -14,7 +15,7 @@ const Login = () => {
+   const handleLogin = async (e) => {
+     e.preventDefault();
+     try {
+-      const response = await axios.post(`${API_BASE_URL}/auth/login/`, { username, password });
++      const response = await axios.post(`${BASE_URL}/auth/login/`, { username, password });
+       localStorage.setItem('token', response.data.access);
+       navigate('/');
+     } catch (error) {
+@@ -48,4 +49,4 @@ const Login = () => {
+   );
+ };
+ 
+-export default Login;
+\ No newline at end of file
++export default Login;
+diff --git a/src/pages/Register.jsx b/src/pages/Register.jsx
+index 9e606cd..d506c5a 100644
+--- a/src/pages/Register.jsx
++++ b/src/pages/Register.jsx
+@@ -2,8 +2,9 @@ import axios from 'axios';
+ import { useState } from 'react';
+ import { useNavigate } from 'react-router-dom';
+ import './Register.css'
++import { API_BASE_URL } from '../api/api';
+ 
+-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com/accounts";
++const BASE_URL = `${API_BASE_URL}/accounts`;
+ 
+ const Register = () => {
+   const [username, setUsername] = useState('');
+@@ -20,7 +21,7 @@ const Register = () => {
+       return;
+     }
+     try {
+-      const response = await axios.post(`${API_BASE_URL}/auth/register/`, {
++      const response = await axios.post(`${BASE_URL}/auth/register/`, {
+         username: email.split("@")[0], // Generate a simple username from email
+         email,
+         password,
+diff --git a/src/pages/ReservationForm.jsx b/src/pages/ReservationForm.jsx
+index 2daf842..f7ee13c 100644
+--- a/src/pages/ReservationForm.jsx
++++ b/src/pages/ReservationForm.jsx
+@@ -4,7 +4,7 @@ import axios from 'axios';
+ import DatePicker from 'react-datepicker';
+ import 'react-datepicker/dist/react-datepicker.css';
+ import './ReservationForm.css'; 
+-import api from '../api/api';
++import api, { API_BASE_URL } from '../api/api';
+ 
+ 
+ const ReservationForm = () => {
+@@ -28,7 +28,7 @@ const ReservationForm = () => {
+   useEffect(() => {
+     const fetchRestaurantDetails = async () => {
+       try {
+-        const response = await axios.get(`https://tours-backend-vy6o.onrender.com/restaurants/${restaurantId}/`);
++        const response = await axios.get(`${API_BASE_URL}/restaurants/restaurants/${restaurantId}/`);
+         setRestaurant(response.data);
+       } catch (err) {
+         setError('Failed to load restaurant details.', err);
+@@ -71,13 +71,19 @@ const ReservationForm = () => {
+       setSuccessMessage('');
+ 
+       try {
+-        await api.createReservation({
++        const { error, message } = await api.createReservation({
+           restaurant: restaurantId,
+           reservation_datetime: formData.reservation_datetime.toISOString(),
+           party_size: parseInt(formData.party_size, 10),
+           special_requests: formData.special_requests,
+         });
+ 
++        const errorMessage = error || message
++        if (errorMessage) {
++          setError(errorMessage)
++          return
++        }
++
+         setSuccessMessage('Reservation successful! Redirecting...');
+         setTimeout(() => navigate('/reservation-success'), 2000);
+       } catch (err) {
+diff --git a/src/pages/ReservationList.jsx b/src/pages/ReservationList.jsx
+index 21c0547..9b883e6 100644
+--- a/src/pages/ReservationList.jsx
++++ b/src/pages/ReservationList.jsx
+@@ -1,10 +1,11 @@
+ import React, { useEffect, useState } from "react";
++import { API_BASE_URL } from "../api/api";
+ 
+ const ReservationList = () => {
+   const [reservations, setReservations] = useState([]);
+ 
+   useEffect(() => {
+-    fetch("https://tours-backend-vy6o.onrender.com/restaurants/reservations/")
++    fetch(`${API_BASE_URL}/restaurants/reservations/`)
+       .then((res) => res.json())
+       .then((data) => setReservations(data))
+       .catch((err) => console.error(err));
+diff --git a/src/pages/RestaurantDetails.jsx b/src/pages/RestaurantDetails.jsx
+index 71613b5..a3aa7ba 100644
+--- a/src/pages/RestaurantDetails.jsx
++++ b/src/pages/RestaurantDetails.jsx
+@@ -1,13 +1,14 @@
+ import React, { useEffect, useState } from "react";
+ import { useParams } from "react-router-dom";
+ import ReservationForm from "./ReservationForm";
++import { API_BASE_URL } from "../api/api";
+ 
+ const RestaurantDetail = () => {
+   const { id } = useParams();
+   const [restaurant, setRestaurant] = useState(null);
+ 
+   useEffect(() => {
+-    fetch(`https://tours-backend-vy6o.onrender.com/restaurants/restaurants/${id}/`)
++    fetch(`${API_BASE_URL}/restaurants/restaurants/${id}/`)
+       .then((res) => res.json())
+       .then((data) => setRestaurant(data))
+       .catch((err) => console.error(err));
+diff --git a/src/pages/RestaurantList.jsx b/src/pages/RestaurantList.jsx
+index 2a5186c..5400219 100644
+--- a/src/pages/RestaurantList.jsx
++++ b/src/pages/RestaurantList.jsx
+@@ -24,7 +24,7 @@ const RestaurantList = () => {
+       console.log('Fetch response:', fetchResponse.data);
+       
+       // Then get the full list from our database
+-      const listResponse = await axios.get('/restaurants/');
++      const listResponse = await axios.get('/restaurants/restaurants/');
+       setRestaurants(listResponse.data);
+       setLoading(false);
+     } catch (err) {
+@@ -116,4 +116,4 @@ const RestaurantList = () => {
+   );
+ };
+ 
+-export default RestaurantList;
+\ No newline at end of file
++export default RestaurantList;
+diff --git a/src/pages/UserProfile.jsx b/src/pages/UserProfile.jsx
+index 152dc4b..09fc152 100644
+--- a/src/pages/UserProfile.jsx
++++ b/src/pages/UserProfile.jsx
+@@ -1,5 +1,6 @@
+ import React, { useState, useEffect } from 'react';
+ import axios from 'axios';
++import { API_BASE_URL } from '../api/api';
+ 
+ const UserProfile = () => {
+   const [profile, setProfile] = useState(null);
+@@ -14,7 +15,7 @@ const UserProfile = () => {
+   useEffect(() => {
+     const fetchProfileData = async () => {
+         try {
+-          const response = await axios.get('https://tours-backend-vy6o.onrender.com/accounts/profile/', {
++          const response = await axios.get(`${API_BASE_URL}/accounts/profile/`, {
+             headers: {
+               Authorization: `Bearer ${localStorage.getItem('token')}`,
+             }
+@@ -60,14 +61,14 @@ const UserProfile = () => {
+     }
+   
+     try {
+-      await axios.put('https://tours-backend-vy6o.onrender.com/accounts/profile/', formDataToSend, {
++      await axios.put(`${API_BASE_URL}/accounts/profile/`, formDataToSend, {
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem('token')}`,
+         },
+       });
+       setEditMode(false); // Disable edit mode after submitting
+       // Optionally, refetch the data to reflect changes
+-      const updatedProfileResponse = await axios.get('https://tours-backend-vy6o.onrender.com/accounts/profile/', {
++      const updatedProfileResponse = await axios.get(`${API_BASE_URL}/accounts/profile/`, {
+         headers: {
+           Authorization: `Bearer ${localStorage.getItem('token')}`,
+         },
+-- 
+2.49.0
+

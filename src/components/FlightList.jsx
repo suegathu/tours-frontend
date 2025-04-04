@@ -29,7 +29,7 @@ const FlightList = () => {
     }
 
     try {
-      const flightsData = await api.fetchFlightsFromAviationStack(
+      const flightsData = await api.searchFlights(
         search.from,
         search.to,
         search.date
@@ -85,8 +85,6 @@ const FlightList = () => {
       <Grid container spacing={2} style={{ marginTop: "20px" }}>
         {flights.length > 0 ? (
           flights.map((flight, index) => {
-            console.log("Flight Data:", flight); // ✅ Debugging: Ensure ID exists
-
             const flightId = flight.id ?? flight.flight_number ?? null; // ✅ Use flight_number as backup
 
             return (

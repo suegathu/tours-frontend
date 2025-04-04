@@ -24,7 +24,7 @@ const RestaurantList = () => {
       console.log('Fetch response:', fetchResponse.data);
       
       // Then get the full list from our database
-      const listResponse = await axios.get('/restaurants/');
+      const listResponse = await axios.get('/restaurants/restaurants/');
       setRestaurants(listResponse.data);
       setLoading(false);
     } catch (err) {

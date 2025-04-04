@@ -28,10 +28,6 @@ function Home() {
     );
   }, []);
 
-  useEffect(() => {
-    console.log(JSON.stringify({ activeLocation }));
-  }, [activeLocation]);
-
   const handleSearch = async () => {
     if (!query.trim()) {
       setError("Please enter a location to search");

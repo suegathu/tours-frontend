@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ReservationForm from "./ReservationForm";
+import { API_BASE_URL } from "../api/api";
 
 const RestaurantDetail = () => {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
 
   useEffect(() => {
-    fetch(`https://tours-backend-vy6o.onrender.com/restaurants/restaurants/${id}/`)
+    fetch(`${API_BASE_URL}/restaurants/restaurants/${id}/`)
       .then((res) => res.json())
       .then((data) => setRestaurant(data))
       .catch((err) => console.error(err));

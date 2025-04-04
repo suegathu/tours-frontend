@@ -2,13 +2,13 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
 
-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com";
+const API_BASE_URL = "API_BASE_URL";
 
 function RestaurantDetail({ id }) {
     const [restaurant, setRestaurant] = useState(null);
   
     useEffect(() => {
-      axios.get(`${API_BASE_URL}/restaurants/${id}/`)
+      axios.get(`${API_BASE_URL}/restaurants/restaurants/${id}/`)
         .then(response => setRestaurant(response.data))
         .catch(error => console.error("Error fetching details:", error));
     }, [id]);

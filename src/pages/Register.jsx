@@ -2,8 +2,9 @@ import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Register.css'
+import { API_BASE_URL } from '../api/api';
 
-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com/accounts";
+const BASE_URL = `${API_BASE_URL}/accounts`;
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -20,7 +21,7 @@ const Register = () => {
       return;
     }
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/register/`, {
+      const response = await axios.post(`${BASE_URL}/auth/register/`, {
         username: email.split("@")[0], // Generate a simple username from email
         email,
         password,

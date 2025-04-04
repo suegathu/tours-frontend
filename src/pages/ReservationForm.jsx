@@ -4,7 +4,7 @@ import axios from 'axios';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import './ReservationForm.css'; 
-import api from '../api/api';
+import api, { API_BASE_URL } from '../api/api';
 
 
 const ReservationForm = () => {
@@ -28,7 +28,7 @@ const ReservationForm = () => {
   useEffect(() => {
     const fetchRestaurantDetails = async () => {
       try {
-        const response = await axios.get(`https://tours-backend-vy6o.onrender.com/restaurants/${restaurantId}/`);
+        const response = await axios.get(`${API_BASE_URL}/restaurants/restaurants/${restaurantId}/`);
         setRestaurant(response.data);
       } catch (err) {
         setError('Failed to load restaurant details.', err);
@@ -71,12 +71,18 @@ const ReservationForm = () => {
       setSuccessMessage('');
 
       try {
-        await api.createReservation({
+        const { error, message } = await api.createReservation({
           restaurant: restaurantId,
           reservation_datetime: formData.reservation_datetime.toISOString(),
           party_size: parseInt(formData.party_size, 10),
           special_requests: formData.special_requests,
         });
+
+        const errorMessage = error || message
+        if (errorMessage) {
+          setError(errorMessage)
+          return
+        }
 
         setSuccessMessage('Reservation successful! Redirecting...');
         setTimeout(() => navigate('/reservation-success'), 2000);

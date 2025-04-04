@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { API_BASE_URL } from "../api/api";
 
 const ReservationList = () => {
   const [reservations, setReservations] = useState([]);
 
   useEffect(() => {
-    fetch("https://tours-backend-vy6o.onrender.com/restaurants/reservations/")
+    fetch(`${API_BASE_URL}/restaurants/reservations/`)
       .then((res) => res.json())
       .then((data) => setReservations(data))
       .catch((err) => console.error(err));

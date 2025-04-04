@@ -2,8 +2,9 @@ import axios from 'axios';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css'
+import { API_BASE_URL } from '../api/api';
 
-const API_BASE_URL = "https://tours-backend-vy6o.onrender.com/accounts";
+const BASE_URL = `${API_BASE_URL}/accounts`;
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -14,7 +15,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login/`, { username, password });
+      const response = await axios.post(`${BASE_URL}/auth/login/`, { username, password });
       localStorage.setItem('token', response.data.access);
       navigate('/');
     } catch (error) {
